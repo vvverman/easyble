@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  boards    Board[]
+  createdAt DateTime @default(now())
+}
+
+model Board {
+  id        String   @id @default(cuid())
+  title     String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   String
+  columns   Column[]
+  createdAt DateTime @default(now())
+
+  @@index([ownerId])
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  title     String
+  color     String
+  order     Int
+  board     Board    @relation(fields: [boardId], references: [id])
+  boardId   String
+  tasks     Task[]
+  createdAt DateTime @default(now())
+
+  @@index([boardId])
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  order       Int
+  column      Column     @relation(fields: [columnId], references: [id])
+  columnId    String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([columnId])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}

@@ -1,6 +1,8 @@
+'use client';
+
+import Link from 'next/link';
 import { BookTextIcon, SquareKanbanIcon } from 'lucide-react';
 import type { CSSProperties } from 'react';
-import { Link } from 'react-router';
 
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
@@ -52,7 +54,7 @@ export function Hero() {
 
         <div className="mt-10 flex items-center justify-center gap-2">
           <Button asChild>
-            <Link to="/example">Try it out</Link>
+            <Link href="/example">Try it out</Link>
           </Button>
 
           <Button asChild className="text-foreground" variant="link">

@@ -1,3 +1,5 @@
+'use client';
+
 import { CheckIcon, ClipboardIcon } from 'lucide-react';
 import * as React from 'react';
 

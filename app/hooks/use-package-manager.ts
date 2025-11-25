@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 
 type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';

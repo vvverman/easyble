@@ -1,7 +1,8 @@
+'use client';
+
 import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, MouseEvent } from 'react';
 import { TbBrightness } from 'react-icons/tb';
-import { Form } from 'react-router';
 
 import { Button } from '~/components/ui/button';
 import {
@@ -15,34 +16,48 @@ import {
 } from '~/components/ui/dropdown-menu';
 import { cn } from '~/lib/utils';
 
-import {
-  COLOR_SCHEME_FORM_KEY,
-  colorSchemes,
-  THEME_TOGGLE_INTENT,
-} from './color-scheme-constants';
-import { useColorScheme } from './use-color-scheme';
+import type { ColorScheme } from './color-scheme-constants';
+import { colorSchemes } from './color-scheme-constants';
+import { setColorScheme, useColorScheme } from './use-color-scheme';
+
+type ColorSchemeButtonProps = ComponentProps<'button'> & {
+  value: ColorScheme;
+};
 
 function ColorSchemeButton({
   className,
   value,
+  children,
+  onClick,
   ...props
-}: ComponentProps<'button'>) {
+}: ColorSchemeButtonProps) {
   const currentColorScheme = useColorScheme();
   const isActive = currentColorScheme === value;
+
+  function handleClick(event: MouseEvent<HTMLButtonElement>) {
+    if (!isActive) {
+      setColorScheme(value);
+    }
+
+    if (onClick) {
+      onClick(event);
+    }
+  }
 
   return (
     <DropdownMenuItem asChild className="w-full">
       <button
         {...props}
+        type="button"
         className={cn(
           className,
           isActive && 'text-primary [&_svg]:!text-primary',
         )}
         disabled={isActive}
-        name={COLOR_SCHEME_FORM_KEY}
-        type="submit"
-        value={value}
-      />
+        onClick={handleClick}
+      >
+        {children}
+      </button>
     </DropdownMenuItem>
   );
 }
@@ -66,25 +81,21 @@ export function ThemeToggle() {
 
         <DropdownMenuSeparator className="sr-only" />
 
-        <DropdownMenuGroup asChild>
-          <Form action="/color-scheme" method="post" navigate={false}>
-            <input name="intent" type="hidden" value={THEME_TOGGLE_INTENT} />
+        <DropdownMenuGroup>
+          <ColorSchemeButton value={colorSchemes.light}>
+            <SunIcon />
+            Light
+          </ColorSchemeButton>
 
-            <ColorSchemeButton value={colorSchemes.light}>
-              <SunIcon />
-              Light
-            </ColorSchemeButton>
+          <ColorSchemeButton value={colorSchemes.dark}>
+            <MoonIcon />
+            Dark
+          </ColorSchemeButton>
 
-            <ColorSchemeButton value={colorSchemes.dark}>
-              <MoonIcon />
-              Dark
-            </ColorSchemeButton>
-
-            <ColorSchemeButton value={colorSchemes.system}>
-              <MonitorIcon />
-              System
-            </ColorSchemeButton>
-          </Form>
+          <ColorSchemeButton value={colorSchemes.system}>
+            <MonitorIcon />
+            System
+          </ColorSchemeButton>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

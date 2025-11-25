@@ -1,12 +1,18 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { SquareKanbanIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { FaGithub } from 'react-icons/fa6';
-import { Link, NavLink } from 'react-router';
 
 import { Button, buttonVariants } from '~/components/ui/button';
 import { cn } from '~/lib/utils';
 
 export function Header({ className, ...props }: ComponentProps<'header'>) {
+  const pathname = usePathname();
+  const isExampleActive = pathname === '/example';
+
   return (
     <header
       className={cn(
@@ -18,27 +24,25 @@ export function Header({ className, ...props }: ComponentProps<'header'>) {
       <div className="container mx-auto flex h-(--header-height) items-center justify-between gap-2 px-4">
         <Link
           className="flex items-center gap-2 self-center font-medium"
-          to="/"
+          href="/"
         >
           <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md sm:size-6">
             <SquareKanbanIcon className="size-6 sm:size-4" />
           </div>
 
-          <span className="hidden font-mono sm:block">Shadcn Kanban Board</span>
+          <span className="hidden font-mono sm:block">Easyble</span>
         </Link>
 
         <nav className="flex gap-2 sm:absolute sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
-          <NavLink
-            className={({ isActive }) =>
-              cn(
-                buttonVariants({ size: 'sm', variant: 'ghost' }),
-                isActive && 'bg-accent text-primary',
-              )
-            }
-            to="/example"
+          <Link
+            href="/example"
+            className={cn(
+              buttonVariants({ size: 'sm', variant: 'ghost' }),
+              isExampleActive && 'bg-accent text-primary',
+            )}
           >
             Example
-          </NavLink>
+          </Link>
         </nav>
 
         <div className="flex gap-2">

@@ -1,72 +1,36 @@
-# Shadcn/UI Kanban Board
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-A modern, production-ready Kanban board for building full-stack B2B & B2C SaaS applications using Shadcn/UI.
+## Getting Started
 
-[Try it out here.](https://shadcn-kanban-board.com/example)
+First, run the development server:
 
-## Features
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-- ⚛️ Zero-Dependencies: pure React - no extra libraries required
-- ⚡ Performance Assurance: `useJsLoaded` hook to show a skeleton until your styles and scripts are ready
-- 🔍 Accessibility-First: full keyboard controls and screen-reader announcements out of the box  
-- 🎨 Seamless Theming: automatically adapts to your [Shadcn/UI](https://ui.shadcn.com) color scheme
-- 🔄 Framework-Agnostic: works with local state, [React Router v7](https://reactrouter.com) actions, or [Next.js Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions) ...
-- 🧩 Extensible APIs: register custom DnD monitors and announcement handlers for fine-grained control
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Motivation
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-We needed a good Kanban board for our LinkedIn scheduling and employee advocacy app, [SocialKit](https://getsocialkit.com/). We're building the app with Shadcn/UI and couldn’t find a Kanban board that was accessible, themeable, and easy to use. So we built our own.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Installation
+## Learn More
 
-* `npm:`
+To learn more about Next.js, take a look at the following resources:
 
-  ```bash
-  npx shadcn@latest add https://shadcn-kanban-board.com/r/kanban.json
-  npx shadcn@latest add https://shadcn-kanban-board.com/r/use-js-loaded.json
-  ```
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-* `yarn:`
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-  ```bash
-  yarn dlx shadcn@latest add https://shadcn-kanban-board.com/r/kanban.json
-  yarn dlx shadcn@latest add https://shadcn-kanban-board.com/r/use-js-loaded.json
-  ```
+## Deploy on Vercel
 
-* `pnpm:`
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-  ```bash
-  pnpm dlx shadcn@latest add https://shadcn-kanban-board.com/r/kanban.json
-  pnpm dlx shadcn@latest add https://shadcn-kanban-board.com/r/use-js-loaded.json
-  ```
-
-* `bun:`
-
-  ```bash
-  bunx shadcn@latest add https://shadcn-kanban-board.com/r/kanban.json
-  bunx shadcn@latest add https://shadcn-kanban-board.com/r/use-js-loaded.json
-  ```
-
-## Example
-
-Check out the [example page](https://github.com/janhesters/shadcn-kanban-board/blob/main/app/routes/example.tsx). It demonstrates:
-
-- **Provider & layout**: Wraps everything in `KanbanBoardProvider` and sets up `<KanbanBoard>` inside your page.
-- **Dynamic columns & cards**: Uses `createId()` from `@paralleldrive/cuid2` to generate stable IDs.
-- **Add / remove**: Add or delete columns and cards, with auto-scroll to keep the latest column in view.
-- **Inline editing**: Edit column titles and card titles in place via `<Input>` and `<Textarea>`.
-- **Drag & drop**: Full mouse & keyboard DnD powered by `useDndEvents()`, including space/enter to pick up & drop, arrow keys to move, escape to cancel.
-- **Skeleton & JS-load guard**: Shows a `<KanbanBoardColumnSkeleton>` via `useJsLoaded()` until client-side JS is ready.
-- **Accessibility**: Screen-reader announcements on drag events, focus management, and ARIA labels everywhere.
-- **Theming & colors**: Color-circle primitives (`KanbanColorCircle`) driven by your theme’s CSS vars.
-- **Menus & icons**: Per-column dropdown (edit/delete) with `lucide-react` icons, tooltips, and `<DropdownMenu>`.
-
-Between the hooks, primitives and UX details (autoscroll, autofocus, multi-line card support), it’s a complete pattern you can lift straight into your own app. Just paste in `KanbanBoardPage` and go.
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
-
-## Built with ❤️ by [ReactSquad](https://reactsquad.io/)
-
-If you want to hire senior React developers to augment your team, or build your entire product from scratch, [schedule a call with us](https://www.reactsquad.io/schedule-a-call).
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
