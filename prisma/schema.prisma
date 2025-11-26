@@ -11,7 +11,7 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String?
-  boards        Board[]
+  projects      Project[] // Renamed from boards
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   emailVerified Boolean   @default(false)
@@ -22,7 +22,7 @@ model User {
   accounts      Account[]
 }
 
-model Board {
+model Project { // Renamed from Board
   id        String   @id @default(cuid())
   title     String
   owner     User     @relation(fields: [ownerId], references: [id])
@@ -38,12 +38,12 @@ model Column {
   title     String
   color     String
   order     Int
-  board     Board    @relation(fields: [boardId], references: [id])
-  boardId   String
+  project   Project  @relation(fields: [projectId], references: [id]) // Renamed from board
+  projectId String   // Renamed from boardId
   tasks     Task[]
   createdAt DateTime @default(now())
 
-  @@index([boardId])
+  @@index([projectId]) // Renamed from boardId
 }
 
 model Task {
