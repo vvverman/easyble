@@ -12,6 +12,7 @@ model User {
   email         String    @unique
   name          String?
   projects      Project[]
+  teams         Team[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   emailVerified Boolean   @default(false)
@@ -21,15 +22,30 @@ model User {
   accounts      Account[]
 }
 
+model Team {
+  id        String    @id @default(cuid())
+  name      String
+  owner     User      @relation(fields: [ownerId], references: [id])
+  ownerId   String
+  projects  Project[]
+  createdAt DateTime  @default(now())
+
+  @@index([ownerId])
+}
+
 model Project {
   id        String   @id @default(cuid())
   title     String
+  icon      String   @default("FolderKanban")
   owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   String
+  team      Team?    @relation(fields: [teamId], references: [id])
+  teamId    String?
   boards    Board[]
   createdAt DateTime @default(now())
 
   @@index([ownerId])
+  @@index([teamId])
 }
 
 model Board {

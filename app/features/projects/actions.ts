@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation';
 import prisma from '~/lib/prisma';
 
 export async function createProject(formData: FormData) {
-  const title = formData.get('title') as string;
+  const title = (formData.get('title') as string).trim();
+  const icon = ((formData.get('icon') as string | null) || 'FolderKanban').trim();
+  const teamId = (formData.get('teamId') as string | null)?.trim() || null;
 
   let user = await prisma.user.findFirst();
   if (!user) {
@@ -15,7 +17,7 @@ export async function createProject(formData: FormData) {
           name: 'Test User',
         },
       });
-    } catch (e) {
+    } catch {
       user = await prisma.user.findFirst();
     }
   }
@@ -25,7 +27,9 @@ export async function createProject(formData: FormData) {
   const project = await prisma.project.create({
     data: {
       title,
+      icon,
       ownerId: user.id,
+      teamId: teamId && teamId.length > 0 ? teamId : null,
       boards: {
         create: {
           title: 'Main board',

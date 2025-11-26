@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { redirect } from "next/navigation"
 import prisma from "~/lib/prisma"
 
 import { AppSidebar } from "@/components/app-sidebar"
@@ -15,8 +16,18 @@ export default async function ProjectsLayout({
 }: {
   children: ReactNode
 }) {
+  // Жёстко: если в системе ещё нет ни одной команды — отправляем на онбординг
+  const teamCount = await prisma.team.count()
+  if (teamCount === 0) {
+    redirect("/onboarding/team")
+  }
+
+  // Временно берём первого пользователя, как и раньше
   const user = await prisma.user.findFirst({
     include: {
+      teams: {
+        orderBy: { createdAt: "asc" },
+      },
       projects: {
         include: {
           boards: {
@@ -30,10 +41,11 @@ export default async function ProjectsLayout({
   })
 
   const projects = user?.projects ?? []
+  const teams = user?.teams ?? []
 
   return (
     <SidebarProvider>
-      <AppSidebar projects={projects} />
+      <AppSidebar projects={projects} teams={teams} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2">

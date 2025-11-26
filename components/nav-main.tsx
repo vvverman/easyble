@@ -23,6 +23,7 @@ import {
 
 export function NavMain({
   items,
+  currentTeamId,
 }: {
   items: {
     title: string
@@ -34,15 +35,20 @@ export function NavMain({
       url: string
     }[]
   }[]
+  currentTeamId?: string
 }) {
   const router = useRouter()
+
+  const newProjectUrl = currentTeamId
+    ? `/projects/new?team=${currentTeamId}`
+    : "/projects/new"
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Projects</SidebarGroupLabel>
       <SidebarGroupAction
         title="New project"
-        onClick={() => router.push("/projects/new")}
+        onClick={() => router.push(newProjectUrl)}
       >
         <Plus className="h-4 w-4" />
         <span className="sr-only">New project</span>
@@ -50,7 +56,7 @@ export function NavMain({
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible
-            key={item.title}
+            key={item.url}
             asChild
             defaultOpen={item.isActive}
             className="group/collapsible"
@@ -66,7 +72,7 @@ export function NavMain({
               <CollapsibleContent>
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
+                    <SidebarMenuSubItem key={subItem.url}>
                       <SidebarMenuSubButton asChild>
                         <Link href={subItem.url}>
                           <span>{subItem.title}</span>

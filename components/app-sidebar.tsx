@@ -1,11 +1,26 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import {
   AudioWaveform,
   Command,
   Frame,
   GalleryVerticalEnd,
+  FolderKanban,
+  SquareKanban,
+  SquareDashedKanban,
+  Briefcase,
+  BriefcaseBusiness,
+  BriefcaseMedical,
+  Folder,
+  FolderOpen,
+  ClipboardList,
+  ClipboardCheck,
+  Target,
+  Rocket,
+  Layers,
+  Cat,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -27,47 +42,72 @@ type Board = {
 type Project = {
   id: string
   title: string
+  icon?: string
   boards?: Board[]
+  teamId?: string | null
 }
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
+type Team = {
+  id: string
+  name: string
 }
+
+const ICON_MAP = {
+  FolderKanban,
+  SquareKanban,
+  SquareDashedKanban,
+  Briefcase,
+  BriefcaseBusiness,
+  BriefcaseMedical,
+  Folder,
+  FolderOpen,
+  ClipboardList,
+  ClipboardCheck,
+  Target,
+  Rocket,
+  Layers,
+  Cat,
+} as const
+
+const TEAM_ICONS = [GalleryVerticalEnd, AudioWaveform, Command]
 
 export function AppSidebar({
   projects,
+  teams,
   ...props
 }: {
   projects: Project[]
+  teams: Team[]
 } & React.ComponentProps<typeof Sidebar>) {
-  const navItems = projects.map((project) => {
+  const searchParams = useSearchParams()
+  const teamFromUrl = searchParams.get("team") || undefined
+
+  const defaultTeamId = teams[0]?.id
+  const currentTeamId = teamFromUrl ?? defaultTeamId
+
+  const uiTeams = teams.map((team, index) => ({
+    id: team.id,
+    name: team.name,
+    plan: "Workspace",
+    logo: TEAM_ICONS[index % TEAM_ICONS.length],
+  }))
+
+  const filteredProjects =
+    currentTeamId != null
+      ? projects.filter((p) => p.teamId === currentTeamId)
+      : projects
+
+  const navItems = filteredProjects.map((project) => {
     const boards = project.boards ?? []
+    const Icon =
+      (project.icon &&
+        ICON_MAP[project.icon as keyof typeof ICON_MAP]) ||
+      Frame
 
     return {
       title: project.title,
       url: `/projects/${project.id}`,
-      icon: Frame,
+      icon: Icon,
       isActive: false,
       items: [
         ...boards.map((board) => ({
@@ -85,13 +125,13 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={uiTeams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navItems} />
+        <NavMain items={navItems} currentTeamId={currentTeamId} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

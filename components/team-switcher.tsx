@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { Check, ChevronsUpDown, Plus } from "lucide-react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils"
 
 type Team = {
+  id: string
   name: string
   logo: React.ElementType
   plan: string
@@ -28,11 +29,52 @@ type Team = {
 
 export function TeamSwitcher({ teams }: { teams: Team[] }) {
   const { isMobile } = useSidebar()
-  const [activeTeam, setActiveTeam] = React.useState<Team | null>(
-    teams[0] ?? null,
-  )
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  if (!activeTeam) return null
+  const goToNewTeam = () => {
+    router.push("/onboarding/team")
+  }
+
+  // Если команд ещё нет — показываем большую кнопку создания
+  if (!teams || teams.length === 0) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            size="lg"
+            className="justify-between"
+            onClick={goToNewTeam}
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <Plus className="size-4" />
+              </div>
+              <div className="grid text-left text-sm leading-tight">
+                <span className="truncate font-semibold">
+                  Create team
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  Start by creating your first workspace
+                </span>
+              </div>
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
+
+  const currentTeamId = searchParams.get("team")
+  const activeTeam =
+    teams.find((t) => t.id === currentTeamId) ?? teams[0]
+
+  const setTeam = (teamId: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("team", teamId)
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   return (
     <SidebarMenu>
@@ -68,14 +110,14 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
             </DropdownMenuLabel>
             {teams.map((team, index) => (
               <DropdownMenuItem
-                key={team.name}
-                onClick={() => setActiveTeam(team)}
+                key={team.id}
+                onClick={() => setTeam(team.id)}
                 className="flex items-center gap-2 p-2"
               >
                 <Check
                   className={cn(
                     "size-4",
-                    activeTeam.name === team.name
+                    activeTeam.id === team.id
                       ? "opacity-100"
                       : "opacity-0",
                   )}
@@ -90,7 +132,10 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
+            <DropdownMenuItem
+              className="gap-2 p-2"
+              onClick={goToNewTeam}
+            >
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
               </div>
