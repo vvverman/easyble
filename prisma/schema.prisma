@@ -8,11 +8,18 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  boards    Board[]
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  boards        Board[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  emailVerified Boolean   @default(false)
+  image         String?
+
+  // Better Auth relations
+  sessions      Session[]
+  accounts      Account[]
 }
 
 model Board {
@@ -57,4 +64,55 @@ enum TaskStatus {
   TODO
   IN_PROGRESS
   DONE
+}
+
+// ===== Better Auth models =====
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ipAddress String?
+  userAgent String?
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  @@map("session")
+}
+
+model Account {
+  id                    String   @id @default(cuid())
+  accountId             String   @map("providerAccountId")
+  providerId            String   @map("provider")
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id])
+
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime? @map("expiresAt")
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  sessionState          String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
 }

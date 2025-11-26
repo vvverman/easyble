@@ -4,14 +4,52 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SquareKanbanIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { FaGithub } from 'react-icons/fa6';
 
 import { Button, buttonVariants } from '~/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from '~/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
 import { cn } from '~/lib/utils';
+import { authClient } from '@/lib/auth-client';
 
 export function Header({ className, ...props }: ComponentProps<'header'>) {
   const pathname = usePathname();
   const isExampleActive = pathname === '/example';
+
+  const { data: session, isPending } = authClient.useSession();
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await authClient.signIn.social({
+        provider: 'google',
+      });
+    } catch (error) {
+      console.error('Google sign-in failed', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await authClient.signOut();
+    } catch (error) {
+      console.error('Sign out failed', error);
+    }
+  };
+
+  const userEmail = session?.user?.email;
 
   return (
     <header
@@ -46,12 +84,51 @@ export function Header({ className, ...props }: ComponentProps<'header'>) {
         </nav>
 
         <div className="flex gap-2">
-          <Button asChild size="sm" variant="outline">
-            <a href="https://github.com/janhesters/shadcn-kanban-board">
-              <FaGithub />
-              Github
-            </a>
-          </Button>
+          {session?.user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  {userEmail ?? 'Аккаунт'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Аккаунт</DropdownMenuLabel>
+                {userEmail && (
+                  <DropdownMenuItem disabled>{userEmail}</DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  Выйти
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            !isPending && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    Войти
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Войти в Easyble</DialogTitle>
+                    <DialogDescription>
+                      Авторизуйтесь, чтобы сохранять свои доски и задачи.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <Button
+                    className="mt-4 w-full"
+                    variant="default"
+                    onClick={handleGoogleSignIn}
+                  >
+                    Войти через Google
+                  </Button>
+                </DialogContent>
+              </Dialog>
+            )
+          )}
         </div>
       </div>
     </header>
