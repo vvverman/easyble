@@ -72,12 +72,12 @@ const ICON_MAP = {
 const TEAM_ICONS = [GalleryVerticalEnd, AudioWaveform, Command]
 
 export function AppSidebar({
-  projects,
-  teams,
+  projects = [],
+  teams = [],
   ...props
 }: {
-  projects: Project[]
-  teams: Team[]
+  projects?: Project[]
+  teams?: Team[]
 } & React.ComponentProps<typeof Sidebar>) {
   const searchParams = useSearchParams()
   const teamFromUrl = searchParams.get("team") || undefined

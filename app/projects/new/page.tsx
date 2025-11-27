@@ -33,13 +33,14 @@ const ICON_OPTIONS = [
   { value: "Cat", Icon: Cat },
 ] as const
 
-export default function NewProjectPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined }
-}) {
+type NewProjectPageProps = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function NewProjectPage({ searchParams }: NewProjectPageProps) {
+  const resolvedSearchParams = await searchParams
   const teamId =
-    typeof searchParams.team === "string" ? searchParams.team : ""
+    typeof resolvedSearchParams.team === "string" ? resolvedSearchParams.team : ""
 
   return (
     <div className="h-full flex flex-col">

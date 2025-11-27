@@ -48,6 +48,14 @@ export default async function BoardPage({ params }: BoardPageProps) {
           .toUpperCase()
       : "?"
 
+  const avatars = owner
+    ? [
+        <Avatar key={owner.id} className="h-8 w-8 border">
+          <AvatarFallback>{ownerInitials}</AvatarFallback>
+        </Avatar>,
+      ]
+    : []
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b flex justify-between items-center">
@@ -65,17 +73,13 @@ export default async function BoardPage({ params }: BoardPageProps) {
             Kanban View
           </span>
           <AvatarGroup>
-            {[owner ? (
-              <Avatar key={owner.id} className="h-8 w-8 border">
-                <AvatarFallback>{ownerInitials}</AvatarFallback>
-              </Avatar>
-            ) : null]}
+            {avatars}
           </AvatarGroup>
         </div>
       </div>
 
       <div className="flex-1 overflow-hidden p-4">
-        <KanbanBoardWrapper project={project} columns={board.columns} />
+        <KanbanBoardWrapper project={project} boardId={board.id} columns={board.columns} />
       </div>
     </div>
   )

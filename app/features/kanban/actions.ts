@@ -5,17 +5,17 @@ import prisma from '~/lib/prisma';
 
 // --- Columns ---
 
-export async function addColumn(projectId: string, title: string) {
-  const count = await prisma.column.count({ where: { projectId } });
+export async function addColumn(boardId: string, projectId: string, title: string) {
+  const count = await prisma.column.count({ where: { boardId } });
   await prisma.column.create({
     data: {
-      projectId,
+      boardId,
       title,
       color: 'primary',
       order: count,
     },
   });
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath(`/projects/${projectId}/boards/${boardId}`);
 }
 
 export async function updateColumnTitle(columnId: string, title: string) {

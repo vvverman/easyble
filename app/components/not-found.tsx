@@ -1,7 +1,7 @@
-import { Link } from 'react-router';
+import Link from "next/link";
 
-import { Button } from '~/components/ui/button';
-import { cn } from '~/lib/utils';
+import { Button } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 
 export type NotFoundProps = {
   className?: string;
@@ -11,7 +11,7 @@ export function NotFound({ className }: NotFoundProps) {
   return (
     <main
       className={cn(
-        'grid min-h-full place-items-center px-6 py-24 sm:py-32 lg:px-8',
+        "grid min-h-full place-items-center px-6 py-24 sm:py-32 lg:px-8",
         className,
       )}
     >
@@ -27,7 +27,7 @@ export function NotFound({ className }: NotFoundProps) {
         </p>
 
         <Button asChild className="mt-10">
-          <Link to="/">Return Home</Link>
+          <Link href="/">Return Home</Link>
         </Button>
       </div>
     </main>
