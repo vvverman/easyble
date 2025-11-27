@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import prisma from "~/lib/prisma"
 import KanbanBoardWrapper from "~/features/kanban/board"
@@ -9,6 +10,38 @@ interface BoardPageProps {
     projectId: string
     boardId: string
   }>
+}
+
+interface BoardPageRouteParams {
+  params: Promise<{
+    projectId: string
+    boardId: string
+  }>
+}
+
+export async function generateMetadata(
+  { params }: BoardPageRouteParams
+): Promise<Metadata> {
+  const { boardId } = await params
+
+  const board = await prisma.board.findUnique({
+    where: { id: boardId },
+    select: { title: true },
+  })
+
+  if (!board || !board.title) {
+    return {
+      title: "Project",
+    }
+  }
+
+  const fullTitle = board.title
+  const truncatedTitle =
+    fullTitle.length > 20 ? fullTitle.slice(0, 20) + "…" : fullTitle
+
+  return {
+    title: truncatedTitle,
+  }
 }
 
 export default async function BoardPage({ params }: BoardPageProps) {
@@ -79,7 +112,11 @@ export default async function BoardPage({ params }: BoardPageProps) {
       </div>
 
       <div className="flex-1 overflow-hidden p-4">
-        <KanbanBoardWrapper project={project} boardId={board.id} columns={board.columns} />
+        <KanbanBoardWrapper
+          project={project}
+          boardId={board.id}
+          columns={board.columns}
+        />
       </div>
     </div>
   )

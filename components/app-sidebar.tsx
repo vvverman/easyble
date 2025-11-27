@@ -107,19 +107,25 @@ function AppSidebarInner({
         ICON_MAP[project.icon as keyof typeof ICON_MAP]) ||
       Frame
 
+    const teamQuery = project.teamId
+      ? `?team=${project.teamId}`
+      : currentTeamId
+        ? `?team=${currentTeamId}`
+        : ""
+
     return {
       title: project.title,
-      url: `/projects/${project.id}`,
+      url: `/projects/${project.id}${teamQuery}`,
       icon: Icon,
       isActive: false,
       items: [
         ...boards.map((board) => ({
           title: board.title,
-          url: `/projects/${project.id}/boards/${board.id}`,
+          url: `/projects/${project.id}/boards/${board.id}${teamQuery}`,
         })),
         {
           title: "Create board",
-          url: `/projects/${project.id}/boards/new`,
+          url: `/projects/${project.id}/boards/new${teamQuery}`,
         },
       ],
     }

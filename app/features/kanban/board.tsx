@@ -375,7 +375,9 @@ function MyKanbanBoardCard({ card, onDeleteCard, onUpdateCardTitle }: any) {
 
   return (
     <KanbanBoardCard data={card} onClick={() => setIsEditing(true)}>
-      <KanbanBoardCardDescription>{card.title}</KanbanBoardCardDescription>
+      <KanbanBoardCardDescription className="break-words">
+        {card.title}
+      </KanbanBoardCardDescription>
       <KanbanBoardCardButtonGroup>
         <KanbanBoardCardButton
           className="text-destructive"

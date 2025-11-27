@@ -3,6 +3,14 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import prisma from "~/lib/prisma"
 import { updateDisplayName } from "~/features/account/actions"
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
 export default async function AccountPage() {
   const headersList = await headers()
@@ -25,48 +33,58 @@ export default async function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold leading-tight">
-            Account
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your profile information.
-          </p>
-        </div>
+    <div className="mx-auto flex max-w-xl flex-col gap-6 p-6">
+      <Breadcrumb className="mb-1">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Account</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-        <div className="space-y-1 text-sm">
-          <p className="text-muted-foreground">Email</p>
-          <p className="font-medium">{user.email}</p>
-        </div>
-
-        <form action={updateDisplayName} className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="name"
-              className="text-sm font-medium text-foreground"
-            >
-              Display name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              defaultValue={user.name ?? ""}
-              required
-              className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Save changes
-          </button>
-        </form>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold leading-tight">
+          Account
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Manage your profile information.
+        </p>
       </div>
+
+      <div className="space-y-1 text-sm">
+        <p className="text-muted-foreground">Email</p>
+        <p className="font-medium">{user.email}</p>
+      </div>
+
+      <form action={updateDisplayName} className="space-y-4">
+        <div className="space-y-2">
+          <label
+            htmlFor="name"
+            className="text-sm font-medium text-foreground"
+          >
+            Display name
+          </label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            defaultValue={user.name ?? ""}
+            required
+            className="w-full rounded-md border px-3 py-2 text-sm bg-background"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Save changes
+        </button>
+      </form>
     </div>
   )
 }

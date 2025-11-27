@@ -71,15 +71,35 @@ export function NavMain({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
-                  {item.items?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.url}>
-                      <SidebarMenuSubButton asChild>
-                        <Link href={subItem.url}>
-                          <span>{subItem.title}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
+                  {item.items?.map((subItem) => {
+                    const isCreateBoard = subItem.url.includes("/boards/new")
+
+                    return (
+                      <SidebarMenuSubItem key={subItem.url}>
+                        <SidebarMenuSubButton asChild>
+                          <Link
+                            href={subItem.url}
+                            className={
+                              isCreateBoard
+                                ? "flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                                : undefined
+                            }
+                          >
+                            {isCreateBoard ? (
+                              <>
+                                <span className="flex h-5 w-5 items-center justify-center rounded border border-dashed border-muted-foreground/60">
+                                  <Plus className="h-3 w-3" />
+                                </span>
+                                <span>{subItem.title}</span>
+                              </>
+                            ) : (
+                              <span>{subItem.title}</span>
+                            )}
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    )
+                  })}
                 </SidebarMenuSub>
               </CollapsibleContent>
             </SidebarMenuItem>

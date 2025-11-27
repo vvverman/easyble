@@ -56,7 +56,7 @@ export default async function ProjectsLayout({
             />
           </div>
           <div className="flex-1 overflow-hidden">
-            <WorkspaceTabs />
+            <WorkspaceTabs projects={projects} teams={teams} />
           </div>
         </header>
         <main className="flex h-[calc(100vh-4rem)] flex-1 flex-col overflow-hidden">
