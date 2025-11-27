@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import prisma from "~/lib/prisma"
 
@@ -56,7 +57,9 @@ export default async function ProjectsLayout({
             />
           </div>
           <div className="flex-1 overflow-hidden">
-            <WorkspaceTabs projects={projects} teams={teams} />
+            <Suspense fallback={null}>
+              <WorkspaceTabs projects={projects} teams={teams} />
+            </Suspense>
           </div>
         </header>
         <main className="flex h-[calc(100vh-4rem)] flex-1 flex-col overflow-hidden">
