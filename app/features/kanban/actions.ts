@@ -3,6 +3,17 @@
 import { revalidatePath } from 'next/cache';
 import prisma from '~/lib/prisma';
 
+// Вспомогательная функция: из полного текста делаем title (<=100 символов) и description (только если >100)
+function splitTaskContent(raw: string): { title: string; description: string | null } {
+  const full = (raw ?? '').trim();
+  if (!full) {
+    return { title: '', description: null };
+  }
+  const title = full.slice(0, 100);
+  const description = full.length > 100 ? full : null;
+  return { title, description };
+}
+
 // --- Columns ---
 
 export async function addColumn(boardId: string, projectId: string, title: string) {
@@ -34,12 +45,19 @@ export async function deleteColumn(columnId: string) {
 
 // --- Tasks ---
 
-export async function addTask(columnId: string, title: string) {
+export async function addTask(columnId: string, content: string) {
   const count = await prisma.task.count({ where: { columnId } });
+  const { title, description } = splitTaskContent(content);
+
+  if (!title) {
+    return;
+  }
+
   await prisma.task.create({
     data: {
       columnId,
       title,
+      description,
       order: count,
       status: 'TODO',
     },
@@ -47,11 +65,52 @@ export async function addTask(columnId: string, title: string) {
   revalidatePath('/projects/[projectId]');
 }
 
-export async function updateTaskTitle(taskId: string, title: string) {
+export async function updateTaskTitle(taskId: string, content: string) {
+  const { title, description } = splitTaskContent(content);
+
+  if (!title) {
+    return;
+  }
+
   await prisma.task.update({
     where: { id: taskId },
-    data: { title },
+    data: { title, description },
   });
+  revalidatePath('/projects/[projectId]');
+}
+
+export async function updateTaskDetails(
+  taskId: string,
+  payload: {
+    content: string;
+    assignee?: string;
+    dueDate?: string | null;
+    startAt?: string | null;
+    endAt?: string | null;
+  },
+) {
+  const { title, description } = splitTaskContent(payload.content);
+  if (!title) {
+    return;
+  }
+
+  const parseDateTime = (value?: string | null) => {
+    if (!value || !value.trim()) return null;
+    return new Date(value);
+  };
+
+  await prisma.task.update({
+    where: { id: taskId },
+    data: {
+      title,
+      description,
+      assignee: payload.assignee?.trim() || null,
+      dueDate: parseDateTime(payload.dueDate),
+      startAt: parseDateTime(payload.startAt),
+      endAt: parseDateTime(payload.endAt),
+    },
+  });
+
   revalidatePath('/projects/[projectId]');
 }
 
@@ -72,42 +131,33 @@ export async function moveTask(
   const oldColumnId = task.columnId;
   const oldOrder = task.order;
 
-  // Если позиция и колонка не изменились - ничего не делаем
   if (oldColumnId === newColumnId && oldOrder === newOrder) return;
 
   await prisma.$transaction(async (tx) => {
     if (oldColumnId === newColumnId) {
-      // Перемещение внутри одной колонки
       if (newOrder > oldOrder) {
-        // Двигаем вниз: уменьшаем order у тех, кто "всплывает" вверх
         await tx.task.updateMany({
           where: { columnId: oldColumnId, order: { gt: oldOrder, lte: newOrder } },
           data: { order: { decrement: 1 } },
         });
       } else {
-        // Двигаем вверх: увеличиваем order у тех, кто "тонет" вниз
         await tx.task.updateMany({
           where: { columnId: oldColumnId, order: { gte: newOrder, lt: oldOrder } },
           data: { order: { increment: 1 } },
         });
       }
     } else {
-      // Перемещение в другую колонку
-      
-      // 1. Смыкаем ряды в старой колонке (все кто ниже ушедшей - поднимаются)
       await tx.task.updateMany({
         where: { columnId: oldColumnId, order: { gt: oldOrder } },
         data: { order: { decrement: 1 } },
       });
 
-      // 2. Раздвигаем ряды в новой колонке (все кто на этом месте и ниже - опускаются)
       await tx.task.updateMany({
         where: { columnId: newColumnId, order: { gte: newOrder } },
         data: { order: { increment: 1 } },
       });
     }
 
-    // 3. Ставим саму задачу на новое место
     await tx.task.update({
       where: { id: taskId },
       data: { columnId: newColumnId, order: newOrder },

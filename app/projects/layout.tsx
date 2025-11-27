@@ -62,7 +62,8 @@ export default async function ProjectsLayout({
             </Suspense>
           </div>
         </header>
-        <main className="flex h-[calc(100vh-4rem)] flex-1 flex-col overflow-hidden">
+        {/* min-h-0 важно, чтобы скролл уходил во внутренние контейнеры, а не в main */}
+        <main className="flex h-[calc(100vh-4rem)] min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </main>
       </SidebarInset>

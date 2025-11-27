@@ -78,6 +78,10 @@ model Task {
   description String?
   status      TaskStatus @default(TODO)
   order       Int
+  assignee    String?
+  dueDate     DateTime?
+  startAt     DateTime?
+  endAt       DateTime?
   column      Column     @relation(fields: [columnId], references: [id])
   columnId    String
   createdAt   DateTime   @default(now())

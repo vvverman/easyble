@@ -84,7 +84,7 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
     setColumns(initialColumns);
   }, [initialColumns]);
 
-  const scrollContainerReference = useRef<HTMLDivElement>(null);
+  const scrollContainerReference = useRef<HTMLDivElement | null>(null);
 
   function scrollRight() {
     if (scrollContainerReference.current) {

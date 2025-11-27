@@ -54,6 +54,9 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
   const searchParams = useSearchParams()
   const [tabs, setTabs] = React.useState<Tab[]>([])
 
+  // сюда будем записывать, куда нужно перейти после обновления tabs
+  const pendingNavigationRef = React.useRef<string | null>(null)
+
   const teamFromUrl = searchParams.get("team") || undefined
   const defaultTeamId = teams[0]?.id
   const currentTeamId = teamFromUrl ?? defaultTeamId
@@ -80,6 +83,17 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
 
     return `/projects/${projectWithBoard.id}/boards/${board.id}`
   }, [projects, currentTeamId, totalBoardsInTeam])
+
+  // Навигация выполняется только здесь, после того как мы обновили состояние
+  React.useEffect(() => {
+    if (!pendingNavigationRef.current) return
+    const target = pendingNavigationRef.current
+    pendingNavigationRef.current = null
+
+    if (target && target !== pathname) {
+      router.push(target)
+    }
+  }, [pathname, router])
 
   React.useEffect(() => {
     if (!pathname) return
@@ -149,13 +163,12 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
         if (next.length > 0) {
           fallback = next[next.length - 1]?.href
         } else {
-          // Нет вкладок: кидаем на обзорную страницу проектов текущей команды
           const teamQuery = currentTeamIdInner ? `?team=${currentTeamIdInner}` : ""
           fallback = `/projects${teamQuery}`
         }
 
         if (fallback && fallback !== pathname) {
-          router.push(fallback)
+          pendingNavigationRef.current = fallback
         }
       }
 

@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import prisma from '~/lib/prisma';
 
 export async function createBoard(formData: FormData) {
@@ -35,4 +36,58 @@ export async function createBoard(formData: FormData) {
   });
 
   redirect(`/projects/${projectId}/boards/${board.id}`);
+}
+
+// Обновление названия борда
+export async function updateBoard(formData: FormData) {
+  const boardId = (formData.get('boardId') as string | null)?.trim();
+  const projectId = (formData.get('projectId') as string | null)?.trim();
+  const title = (formData.get('title') as string | null)?.trim();
+
+  if (!boardId || !title) return;
+
+  await prisma.board.update({
+    where: { id: boardId },
+    data: { title },
+  });
+
+  if (projectId) {
+    revalidatePath(`/projects/${projectId}/boards/${boardId}`);
+    revalidatePath('/projects');
+  } else {
+    revalidatePath('/projects');
+  }
+}
+
+// Удаление борда со всеми колонками и задачами
+export async function deleteBoard(formData: FormData) {
+  const boardId = (formData.get('boardId') as string | null)?.trim();
+  const projectId = (formData.get('projectId') as string | null)?.trim();
+
+  if (!boardId) return;
+
+  const columns = await prisma.column.findMany({
+    where: { boardId },
+    select: { id: true },
+  });
+  const columnIds = columns.map((c) => c.id);
+
+  if (columnIds.length > 0) {
+    await prisma.task.deleteMany({
+      where: { columnId: { in: columnIds } },
+    });
+
+    await prisma.column.deleteMany({
+      where: { id: { in: columnIds } },
+    });
+  }
+
+  await prisma.board.delete({
+    where: { id: boardId },
+  });
+
+  if (projectId) {
+    revalidatePath(`/projects/${projectId}`);
+  }
+  revalidatePath('/projects');
 }

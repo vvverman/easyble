@@ -90,8 +90,8 @@ export default async function BoardPage({ params }: BoardPageProps) {
     : []
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b flex justify-between items-center">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b px-4 py-4">
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold leading-tight">
             {board.title}
@@ -111,12 +111,15 @@ export default async function BoardPage({ params }: BoardPageProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden p-4">
-        <KanbanBoardWrapper
-          project={project}
-          boardId={board.id}
-          columns={board.columns}
-        />
+      {/* Окно с колонками: один скролл по X ровно по правой части */}
+      <div className="flex flex-1 min-h-0 flex-col">
+        <div className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-hidden pt-4 pb-0">
+          <KanbanBoardWrapper
+            project={project}
+            boardId={board.id}
+            columns={board.columns}
+          />
+        </div>
       </div>
     </div>
   )
