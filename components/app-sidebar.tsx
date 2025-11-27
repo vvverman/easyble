@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import {
   AudioWaveform,
@@ -52,6 +53,11 @@ type Team = {
   name: string
 }
 
+type AppSidebarProps = {
+  projects?: Project[]
+  teams?: Team[]
+} & React.ComponentProps<typeof Sidebar>
+
 const ICON_MAP = {
   FolderKanban,
   SquareKanban,
@@ -71,14 +77,11 @@ const ICON_MAP = {
 
 const TEAM_ICONS = [GalleryVerticalEnd, AudioWaveform, Command]
 
-export function AppSidebar({
+function AppSidebarInner({
   projects = [],
   teams = [],
   ...props
-}: {
-  projects?: Project[]
-  teams?: Team[]
-} & React.ComponentProps<typeof Sidebar>) {
+}: AppSidebarProps) {
   const searchParams = useSearchParams()
   const teamFromUrl = searchParams.get("team") || undefined
 
@@ -135,5 +138,13 @@ export function AppSidebar({
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
+  )
+}
+
+export function AppSidebar(props: AppSidebarProps) {
+  return (
+    <Suspense fallback={null}>
+      <AppSidebarInner {...props} />
+    </Suspense>
   )
 }
