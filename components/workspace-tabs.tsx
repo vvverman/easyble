@@ -1,6 +1,25 @@
 "use client"
 
-import { X } from "lucide-react"
+import { X,
+  GalleryVerticalEnd,
+  AudioWaveform,
+  Command,
+  FolderKanban,
+  SquareKanban,
+  SquareDashedKanban,
+  Briefcase,
+  BriefcaseBusiness,
+  BriefcaseMedical,
+  Folder,
+  FolderOpen,
+  ClipboardList,
+  ClipboardCheck,
+  Target,
+  Rocket,
+  Layers,
+  Cat,
+  Frame,
+} from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import * as React from "react"
 
@@ -15,6 +34,7 @@ type Board = {
 type Project = {
   id: string
   title: string
+  icon?: string
   boards?: Board[]
   teamId?: string | null
 }
@@ -34,6 +54,25 @@ type WorkspaceTabsProps = {
   teams?: Team[]
 }
 
+const ICON_MAP = {
+  FolderKanban,
+  SquareKanban,
+  SquareDashedKanban,
+  Briefcase,
+  BriefcaseBusiness,
+  BriefcaseMedical,
+  Folder,
+  FolderOpen,
+  ClipboardList,
+  ClipboardCheck,
+  Target,
+  Rocket,
+  Layers,
+  Cat,
+} as const
+
+const TEAM_ICONS = [GalleryVerticalEnd, AudioWaveform, Command]
+
 function baseTitle(pathname: string): string {
   if (pathname === "/projects/new") return "New project"
   if (pathname === "/projects") return "Projects"
@@ -48,13 +87,19 @@ function baseTitle(pathname: string): string {
   return pathname
 }
 
+function getProjectForHref(href: string, projects: Project[]): Project | undefined {
+  const match = href.match(/^\/projects\/([^/]+)/)
+  if (!match) return undefined
+  const projectId = match[1]
+  return projects.find((p) => p.id === projectId)
+}
+
 export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [tabs, setTabs] = React.useState<Tab[]>([])
 
-  // сюда будем записывать, куда нужно перейти после обновления tabs
   const pendingNavigationRef = React.useRef<string | null>(null)
 
   const teamFromUrl = searchParams.get("team") || undefined
@@ -84,7 +129,6 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
     return `/projects/${projectWithBoard.id}/boards/${board.id}`
   }, [projects, currentTeamId, totalBoardsInTeam])
 
-  // Навигация выполняется только здесь, после того как мы обновили состояние
   React.useEffect(() => {
     if (!pendingNavigationRef.current) return
     const target = pendingNavigationRef.current
@@ -98,7 +142,6 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
   React.useEffect(() => {
     if (!pathname) return
 
-    // Обзорная страница проектов не должна иметь вкладку
     if (pathname === "/projects") {
       setTabs([])
       return
@@ -106,7 +149,6 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
 
     let title = baseTitle(pathname)
 
-    // Для страниц бордов используем реальное название борда из document.title
     if (
       pathname.startsWith("/projects/") &&
       pathname.includes("/boards/")
@@ -145,7 +187,6 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
   }, [pathname])
 
   const closeTab = (href: string) => {
-    // Если в текущей команде только один борд и это он — не даём закрыть вкладку
     if (onlyBoardPath && href === onlyBoardPath) {
       return
     }
@@ -189,6 +230,19 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
           const isSingleBoardLocked =
             onlyBoardPath && tab.href === onlyBoardPath
 
+          const projectForTab =
+            tab.href.startsWith("/projects/") && tab.href.includes("/boards/")
+              ? getProjectForHref(tab.href, projects)
+              : undefined
+
+          const Icon =
+            projectForTab?.icon &&
+            ICON_MAP[projectForTab.icon as keyof typeof ICON_MAP]
+              ? ICON_MAP[projectForTab.icon as keyof typeof ICON_MAP]
+              : projectForTab
+                ? Frame
+                : undefined
+
           return (
             <TabsTrigger
               key={tab.href}
@@ -198,7 +252,10 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
                 "data-[state=active]:bg-background data-[state=active]:shadow-sm",
               )}
             >
-              <span className="truncate max-w-[160px]">{tab.title}</span>
+              {Icon && (
+                <Icon className="h-3 w-3" />
+              )}
+              <span className="truncate max-w-[140px]">{tab.title}</span>
               {!isSingleBoardLocked && (
                 <span
                   role="button"

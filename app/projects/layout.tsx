@@ -17,13 +17,11 @@ export default async function ProjectsLayout({
 }: {
   children: ReactNode
 }) {
-  // Жёстко: если в системе ещё нет ни одной команды — отправляем на онбординг
   const teamCount = await prisma.team.count()
   if (teamCount === 0) {
     redirect("/onboarding/team")
   }
 
-  // Временно берём первого пользователя, как и раньше
   const user = await prisma.user.findFirst({
     include: {
       teams: {
@@ -48,7 +46,7 @@ export default async function ProjectsLayout({
     <SidebarProvider>
       <AppSidebar projects={projects} teams={teams} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex h-[40px] shrink-0 items-center gap-2 border-b px-2">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator
@@ -62,8 +60,7 @@ export default async function ProjectsLayout({
             </Suspense>
           </div>
         </header>
-        {/* min-h-0 важно, чтобы скролл уходил во внутренние контейнеры, а не в main */}
-        <main className="flex h-[calc(100vh-4rem)] min-h-0 flex-1 flex-col overflow-hidden">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </main>
       </SidebarInset>

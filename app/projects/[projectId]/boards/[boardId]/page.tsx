@@ -91,29 +91,17 @@ export default async function BoardPage({ params }: BoardPageProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b px-4 py-4">
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-bold leading-tight">
-            {board.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {project.title}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
-            Kanban View
-          </span>
+      <div className="flex h-[50px] items-center border-b px-4">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span>Kanban View</span>
           <AvatarGroup>
             {avatars}
           </AvatarGroup>
         </div>
       </div>
 
-      {/* Окно с колонками: один скролл по X ровно по правой части */}
       <div className="flex flex-1 min-h-0 flex-col">
-        <div className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-hidden pt-4 pb-0">
+        <div className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-hidden pl-4 pt-4 pb-0">
           <KanbanBoardWrapper
             project={project}
             boardId={board.id}

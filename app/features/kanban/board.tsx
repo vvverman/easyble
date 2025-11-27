@@ -170,11 +170,17 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
   
   const { onDragStart, onDragEnd, onDragCancel, onDragOver } = useDndEvents();
 
-  function getOverId(column: Column, cardIndex: number): string {
-    if (cardIndex < column.items.length - 1) {
-      return column.items[cardIndex + 1].id;
+  function getOverId(column: Column, cardIndex: number): {
+    columnIndex: number;
+    cardIndex: number;
+  } {
+    for (const [columnIndex, col] of columns.entries()) {
+      const idx = col.items.findIndex((c: Card) => c.id === column.id);
+      if (idx !== -1) {
+        return { columnIndex, cardIndex: idx };
+      }
     }
-    return column.id;
+    return { columnIndex: -1, cardIndex: -1 };
   }
 
   function findCardPosition(cardId: string): {
@@ -252,6 +258,7 @@ function MyKanbanBoardColumn({
   onDragEnd
 }: any) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isAddingCard, setIsAddingCard] = useState(false);
   
   function handleDropOverColumn(dataTransferData: string) {
     const card = JSON.parse(dataTransferData) as Card;
@@ -286,6 +293,16 @@ function MyKanbanBoardColumn({
     };
   }
 
+  function submitNewCard(form: HTMLFormElement | null) {
+    if (!form) return;
+    const fd = new FormData(form);
+    const content = (fd.get('content') as string || '').trim();
+    if (content) {
+      onAddCard(column.id, content);
+    }
+    setIsAddingCard(false);
+  }
+
   return (
     <KanbanBoardColumn columnId={column.id} onDropOverColumn={handleDropOverColumn}>
       <KanbanBoardColumnHeader>
@@ -312,24 +329,70 @@ function MyKanbanBoardColumn({
               <KanbanColorCircle color={column.color || 'primary'} />
               {column.title}
             </KanbanBoardColumnTitle>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <KanbanBoardColumnIconButton>
-                  <MoreHorizontalIcon />
-                </KanbanBoardColumnIconButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDeleteColumn(column.id)}>
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <KanbanBoardColumnIconButton>
+                    <MoreHorizontalIcon />
+                  </KanbanBoardColumnIconButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDeleteColumn(column.id)}>
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <KanbanBoardColumnIconButton onClick={() => setIsAddingCard(true)}>
+                <PlusIcon />
+              </KanbanBoardColumnIconButton>
+            </div>
           </>
         )}
       </KanbanBoardColumnHeader>
+
+      {isAddingCard && (
+        <form
+          className="px-2 pt-1"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitNewCard(e.currentTarget);
+          }}
+        >
+          <KanbanBoardCardTextarea
+            name="content"
+            autoFocus
+            placeholder="New task..."
+            onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitNewCard(e.currentTarget.form);
+              }
+            }}
+            onBlur={(e: React.FocusEvent<HTMLTextAreaElement>) => {
+              const form = e.currentTarget.form;
+              const next = e.relatedTarget as HTMLElement | null;
+              if (!form) return;
+              if (next && form.contains(next)) return;
+              submitNewCard(form);
+            }}
+          />
+          <KanbanBoardColumnFooter>
+            <Button size="sm" type="submit">Add</Button>
+            <Button
+              size="sm"
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddingCard(false)}
+            >
+              Cancel
+            </Button>
+          </KanbanBoardColumnFooter>
+        </form>
+      )}
+
       <KanbanBoardColumnList>
         {column.items.map((card: Card) => (
           <KanbanBoardColumnListItem 
@@ -345,7 +408,6 @@ function MyKanbanBoardColumn({
           </KanbanBoardColumnListItem>
         ))}
       </KanbanBoardColumnList>
-      <MyNewKanbanBoardColumnCard column={column} onAddCard={onAddCard} />
     </KanbanBoardColumn>
   );
 }
@@ -393,39 +455,6 @@ function MyKanbanBoardCard({ card, onDeleteCard, onUpdateCardTitle }: any) {
   );
 }
 
-function MyNewKanbanBoardColumnCard({ column, onAddCard }: any) {
-  const [isAdding, setIsAdding] = useState(false);
-    
-  if (isAdding) {
-    return (
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const fd = new FormData(e.currentTarget);
-          onAddCard(column.id, fd.get('content') as string);
-          setIsAdding(false);
-        }}
-      >
-        <div className={kanbanBoardColumnListItemClassNames}>
-          <KanbanBoardCardTextarea name="content" autoFocus placeholder="New task..." />
-        </div>
-        <KanbanBoardColumnFooter>
-          <Button size="sm" type="submit">Add</Button>
-          <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
-        </KanbanBoardColumnFooter>
-      </form>
-    );
-  }
-
-  return (
-    <KanbanBoardColumnFooter>
-      <KanbanBoardColumnButton onClick={() => setIsAdding(true)}>
-        <PlusIcon /> <span>New card</span>
-      </KanbanBoardColumnButton>
-    </KanbanBoardColumnFooter>
-  );
-}
-
 function MyNewKanbanBoardColumn({ onAddColumn }: any) {
   const [isAdding, setIsAdding] = useState(false);
 
@@ -445,7 +474,7 @@ function MyNewKanbanBoardColumn({ onAddColumn }: any) {
         </KanbanBoardColumnHeader>
         <KanbanBoardColumnFooter>
           <Button size="sm" type="submit">Add</Button>
-          <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+          <Button size="sm" variant="outline" type="button" onClick={() => setIsAdding(false)}>Cancel</Button>
         </KanbanBoardColumnFooter>
       </form>
     );
