@@ -229,3 +229,10 @@
 .simplebar-scrollbar.simplebar-visible::before {
   opacity: 0.6 !important;                /* появляется при скролле/ховере */
 }
+
+/* Убираем лишние нижние отступы внутри SimpleBar, чтобы контент обрезался ровно по границе */
+.simplebar-content,
+.simplebar-content-wrapper {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
