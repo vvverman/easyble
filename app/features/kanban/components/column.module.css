@@ -1,0 +1,29 @@
+.scroll {
+  overflow-y: auto;
+  /* тонкий скролл без сдвига контента */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent;
+}
+
+/* WebKit-браузеры */
+.scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 9999px;
+}
+
+/* при наведении на колонку — сделать ползунок видимым */
+.scroll:hover {
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+}
+
+.scroll:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.5);
+}

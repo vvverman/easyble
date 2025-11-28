@@ -5,7 +5,6 @@ import { useState } from 'react';
 import type { KanbanBoardDropDirection } from '@/new-york/ui/kanban';
 import {
   KanbanBoardColumn,
-  KanbanBoardColumnFooter,
   KanbanBoardColumnHeader,
   KanbanBoardColumnIconButton,
   KanbanBoardColumnList,
@@ -23,6 +22,7 @@ import {
 import { Input } from '~/components/ui/input';
 import { KanbanCard } from './card';
 import { NewCardForm } from './new-card';
+import SimpleBar from 'simplebar-react';
 
 type Card = {
   id: string;
@@ -93,16 +93,6 @@ export function KanbanColumn({
     };
   }
 
-  const scrollbarStyle: React.CSSProperties = {
-    scrollbarWidth: 'thin',
-    scrollbarColor: 'rgba(100, 100, 100, 0.5) transparent',
-  };
-
-  const scrollbarThumbStyle: React.CSSProperties = {
-    WebkitScrollbarWidth: '6px',
-    MsOverflowStyle: '6px',
-  };
-
   return (
     <KanbanBoardColumn columnId={column.id} onDropOverColumn={handleDropOverColumn}>
       <KanbanBoardColumnHeader>
@@ -153,25 +143,37 @@ export function KanbanColumn({
         )}
       </KanbanBoardColumnHeader>
 
-      {isAddingCard && <NewCardForm columnId={column.id} onAddCard={onAddCard} onCancel={() => setIsAddingCard(false)} />}
+      {isAddingCard && (
+        <NewCardForm
+          columnId={column.id}
+          onAddCard={onAddCard}
+          onCancel={() => setIsAddingCard(false)}
+        />
+      )}
 
-      <KanbanBoardColumnList 
-        style={{
-          scrollbarWidth: 'thin' as const,
-          scrollbarColor: 'rgba(100, 100, 100, 0.5) transparent',
-          WebkitScrollbarWidth: '6px',
-          WebkitScrollbarTrack: 'transparent',
-          WebkitScrollbarThumb: 'rgba(100, 100, 100, 0.5)',
-          WebkitScrollbarThumbHover: 'rgba(100, 100, 100, 0.8)',
-          overflowY: 'auto',
-        }}
-      >
-        {column.items.map((card) => (
-          <KanbanBoardColumnListItem key={card.id} cardId={card.id} onDropOverListItem={handleDropOverListItem(card.id)}>
-            <KanbanCard card={card} onDeleteCard={onDeleteCard} onUpdateCardTitle={onUpdateCardTitle} />
-          </KanbanBoardColumnListItem>
-        ))}
-      </KanbanBoardColumnList>
+      {/* Фиксированная высота области карточек, внутренний скролл через SimpleBar */}
+      <div className="flex-1 min-h-0">
+        <SimpleBar
+          style={{ maxHeight: 600 }}
+          autoHide
+        >
+          <KanbanBoardColumnList className="space-y-2">
+            {column.items.map((card) => (
+              <KanbanBoardColumnListItem
+                key={card.id}
+                cardId={card.id}
+                onDropOverListItem={handleDropOverListItem(card.id)}
+              >
+                <KanbanCard
+                  card={card}
+                  onDeleteCard={onDeleteCard}
+                  onUpdateCardTitle={onUpdateCardTitle}
+                />
+              </KanbanBoardColumnListItem>
+            ))}
+          </KanbanBoardColumnList>
+        </SimpleBar>
+      </div>
     </KanbanBoardColumn>
   );
 }

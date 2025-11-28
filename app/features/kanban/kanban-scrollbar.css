@@ -1,0 +1,36 @@
+.kanban-column-scrollbar {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.kanban-column-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kanban-column-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kanban-column-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.kanban-column-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.5);
+}
+
+.kanban-column-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.7);
+}
+
+/* Firefox */
+.kanban-column-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.kanban-column-scrollbar:hover {
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+}

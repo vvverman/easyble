@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "simplebar-react/dist/simplebar.min.css";
 
 @custom-variant dark {
   /* support the .dark class */
@@ -212,4 +213,19 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* SimpleBar: прозрачный трек и невидимый в покое тонкий ползунок */
+.simplebar-track.simplebar-vertical {
+  width: 6px !important;                 /* тонкий трек, визуально ~3px */
+  background-color: transparent !important;
+}
+
+.simplebar-scrollbar::before {
+  background-color: oklch(0.705 0.015 286.067) !important; /* цвет кольца */
+  opacity: 0 !important;                  /* в покое вообще не видно */
+}
+
+.simplebar-scrollbar.simplebar-visible::before {
+  opacity: 0.6 !important;                /* появляется при скролле/ховере */
 }
