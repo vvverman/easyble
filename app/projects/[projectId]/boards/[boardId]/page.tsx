@@ -101,7 +101,10 @@ export default async function BoardPage({ params }: BoardPageProps) {
       </div>
 
       <div className="flex flex-1 min-h-0 flex-col">
-        <div className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-hidden pl-4 pt-4 pb-0">
+        <div
+          className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-hidden pl-4 pt-4 pb-0"
+          style={{ height: "calc(100vh - 50px)" }}
+        >
           <KanbanBoardWrapper
             project={project}
             boardId={board.id}

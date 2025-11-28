@@ -142,11 +142,15 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
   const jsLoaded = useJsLoaded();
 
   return (
-    <KanbanBoard ref={scrollContainerReference}>
+    <KanbanBoard
+      ref={scrollContainerReference}
+      className="h-full"
+    >
       {columns.map((column: Column) =>
         jsLoaded ? (
           <KanbanColumn
             key={column.id}
+            column={column}
             column={column}
             onAddCard={handleAddCard}
             onDeleteCard={handleDeleteCard}
