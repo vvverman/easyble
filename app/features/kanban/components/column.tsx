@@ -151,8 +151,8 @@ export function KanbanColumn({
         />
       )}
 
-      {/* Расширяем область скролла вверх и вниз, чтобы совпасть с границей колонки */}
-      <div className="flex-1 min-h-0 -mt-2 -mb-2">
+      {/* Вытягиваем скролл только вниз, сверху даём штатный отступ колонки */}
+      <div className="flex-1 min-h-0 -mb-2">
         <SimpleBar
           style={{ maxHeight: 620 }}
           autoHide
