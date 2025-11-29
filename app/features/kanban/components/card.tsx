@@ -5,24 +5,18 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   KanbanBoardCard,
   KanbanBoardCardButton,
-  KanbanBoardCardButtonGroup,
   KanbanBoardCardDescription,
 } from '@/new-york/ui/kanban';
 import { Button } from '~/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '~/components/ui/dialog';
 import { Input } from '~/components/ui/input';
+import { Textarea } from '~/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
+import { Sheet, SheetContent } from '../../../../components/ui/sheet';
 
 const MAX_TITLE_LENGTH = 250;
 
@@ -39,9 +33,11 @@ type CardProps = {
 };
 
 export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(card.title);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [description, setDescription] = useState('');
+  const [comment, setComment] = useState('');
 
   useEffect(() => {
     setDraftTitle(card.title);
@@ -49,14 +45,16 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
 
   const initials = useMemo(() => {
     const src = card.title || card.id;
-    return src
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((p) => p[0] || '')
-      .join('')
-      .toUpperCase()
-      .slice(0, 2) || '?';
+    return (
+      src
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((p) => p[0] || '')
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || '?'
+    );
   }, [card.title, card.id]);
 
   function handleSave() {
@@ -64,7 +62,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
     if (next && next !== card.title) {
       onUpdateCardTitle(card.id, next);
     }
-    setIsDialogOpen(false);
+    setIsSheetOpen(false);
   }
 
   function handleTitleChange(value: string) {
@@ -75,92 +73,143 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
     }
   }
 
+  function handleSendComment() {
+    const trimmed = comment.trim();
+    if (!trimmed) return;
+    // TODO: отправка комментария
+    setComment('');
+  }
+
   return (
     <>
-      {/* правая панель задачи */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent
-          className="fixed top-0 right-0 left-auto translate-x-0 translate-y-0 z-50 flex h-screen max-h-screen w-full flex-col border-l bg-background p-0 sm:w-[420px]"
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent
+          side="right"
+          className="flex h-screen max-h-screen w-[50vw] min-w-[320px] sm:max-w-none flex-col border-l bg-background p-0"
         >
-          <div className="border-b px-6 pt-4 pb-3 space-y-2">
-            <DialogHeader className="p-0">
-              <DialogTitle className="text-left text-xs font-medium text-muted-foreground">
-                {card.id}
-              </DialogTitle>
-            </DialogHeader>
-            <h2 className="text-base font-semibold leading-snug break-words">
-              {draftTitle || 'Новая задача'}
-            </h2>
+          {/* Хедер */}
+          <div className="border-b px-6 py-3">
+            <div className="text-xs font-medium text-muted-foreground">#{card.id}</div>
           </div>
 
-          <div className="border-b px-6">
-            <div className="flex gap-6 text-sm">
-              <button className="border-b-2 border-primary py-3 text-primary">
-                Чат
-              </button>
-              <button className="py-3 text-muted-foreground">
-                Инфо / Лог
-              </button>
-              <button className="py-3 text-muted-foreground">
-                Описание
-              </button>
-              <button className="py-3 text-muted-foreground">
-                Подзадачи
-              </button>
-            </div>
-          </div>
+          {/* Тело: две равные колонки + вертикальный разделитель на всю высоту */}
+          <div className="relative flex flex-1 overflow-hidden">
+            {/* Вертикальный разделитель по центру, от верха тела до низа */}
+            <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px bg-border" />
 
-          <div className="flex flex-1 flex-col gap-4 px-6 py-4">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Название</p>
-              <div className="relative">
-                <Input
-                  value={draftTitle}
-                  autoFocus
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSave();
-                    }
-                  }}
-                  className="pr-20 text-sm leading-snug"
-                />
-                <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[11px] text-muted-foreground">
-                  {draftTitle.length} / {MAX_TITLE_LENGTH}
-                </span>
+            {/* Левая колонка: инфа о задаче */}
+            <div className="flex-1">
+              <div className="h-full px-6 py-4 overflow-y-auto">
+                <div className="space-y-5">
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" size="sm" className="h-8 px-4">
+                      Выполнить
+                    </Button>
+                    <Button size="sm" className="h-8 px-4">
+                      Старт
+                    </Button>
+                  </div>
+
+                  <div>
+                    <Input
+                      value={draftTitle}
+                      onChange={(e) => handleTitleChange(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSave();
+                        }
+                      }}
+                      className="text-sm font-medium leading-snug"
+                      placeholder="Название задачи"
+                    />
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Исполнители</div>
+                      <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
+                        Назначить…
+                      </Button>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Проекты</div>
+                      <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
+                        Выбрать проект…
+                      </Button>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Дата</div>
+                      <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
+                        Выбрать дату…
+                      </Button>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Тип</div>
+                      <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
+                        Действие
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground">Описание</div>
+                    <Textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Опишите задачу подробнее…"
+                      className="min-h-[140px] text-sm leading-snug"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex-1 rounded-md border bg-muted/30 px-4 py-3 text-sm leading-snug text-muted-foreground">
-              Здесь пока пусто. Напишите сообщение в чат.
+            {/* Правая колонка: комментарии */}
+            <div className="flex flex-1 flex-col">
+              <div className="flex-1 px-6 py-4">
+                <div className="mb-3 text-xs font-medium text-muted-foreground">
+                  Комментарии
+                </div>
+                <div className="h-full overflow-y-auto">
+                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                    Без комментариев
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t">
+                <div className="px-6 py-3">
+                  <Textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Комментарий…"
+                    className="min-h-[80px] text-sm leading-snug"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendComment();
+                      }
+                    }}
+                  />
+                  <div className="mt-2 flex justify-end">
+                    <Button size="sm" onClick={handleSendComment}>
+                      Отправить
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+        </SheetContent>
+      </Sheet>
 
-          <DialogFooter className="px-6 pb-4 pt-2">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => {
-                setDraftTitle(card.title);
-                setIsDialogOpen(false);
-              }}
-            >
-              Отмена
-            </Button>
-            <Button type="button" onClick={handleSave}>
-              Сохранить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* карточка в колонке */}
+      {/* Карточка в колонке */}
       <KanbanBoardCard
         data={card}
         onClick={() => {
           setDraftTitle(card.title);
-          setIsDialogOpen(true);
+          setIsSheetOpen(true);
         }}
         className="space-y-2"
       >
@@ -173,23 +222,20 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
         </KanbanBoardCardDescription>
 
         <div className="mt-1 flex items-center justify-between">
-          {/* галочка + оставшиеся символы */}
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsCompleted((prev) => !prev);
-              }}
-              className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${
-                isCompleted
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-muted-foreground/40 text-muted-foreground'
-              }`}
-            >
-              {isCompleted && <CheckIcon size={10} />}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCompleted((prev) => !prev);
+            }}
+            className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${
+              isCompleted
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-muted-foreground/40 text-muted-foreground'
+            }`}
+          >
+            {isCompleted && <CheckIcon size={10} />}
+          </button>
 
           <div className="flex items-center gap-2">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-medium text-primary-foreground">
@@ -205,7 +251,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsDialogOpen(true);
+                    setIsSheetOpen(true);
                   }}
                 >
                   Изменить
