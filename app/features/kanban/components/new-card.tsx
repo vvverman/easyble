@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { KanbanBoardCardTextarea, KanbanBoardColumnFooter } from '@/new-york/ui/kanban';
+import { KanbanBoardCardTextarea } from '@/new-york/ui/kanban';
 import { Button } from '~/components/ui/button';
+
+const MAX_CONTENT_LENGTH = 1024;
 
 type NewCardFormProps = {
   columnId: string;
@@ -13,7 +15,12 @@ type NewCardFormProps = {
 export function NewCardForm({ columnId, onAddCard, onCancel }: NewCardFormProps) {
   const [content, setContent] = useState('');
 
-  function submitNewCard(e: React.FormEvent<HTMLFormElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const value = e.target.value.slice(0, MAX_CONTENT_LENGTH);
+    setContent(value);
+  }
+
+  function submitNewCard(e: React.FormEvent<HTMLFormElement> | React.KeyboardEvent) {
     e.preventDefault();
     const trimmed = content.trim();
     if (trimmed) {
@@ -30,18 +37,27 @@ export function NewCardForm({ columnId, onAddCard, onCancel }: NewCardFormProps)
         autoFocus
         placeholder="New task..."
         value={content}
-        onChange={e => setContent(e.target.value)}
+        onChange={handleChange}
         onKeyDown={e => {
           if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
             submitNewCard(e);
           }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            onCancel();
+          }
         }}
+        maxLength={MAX_CONTENT_LENGTH}
+        className="text-sm leading-snug"
       />
-      <KanbanBoardColumnFooter>
-        <Button size="sm" type="submit">Add</Button>
-        <Button size="sm" variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-      </KanbanBoardColumnFooter>
+      <div className="mt-1 flex justify-between items-center">
+        <div className="text-[10px] text-muted-foreground">
+          {content.length} / {MAX_CONTENT_LENGTH}
+        </div>
+        <Button size="sm" type="submit">
+          Add
+        </Button>
+      </div>
     </form>
   );
 }
