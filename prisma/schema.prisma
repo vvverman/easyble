@@ -77,6 +77,7 @@ model Task {
   title       String
   description String?
   status      TaskStatus @default(TODO)
+  kind        TaskKind   @default(TASK)
   order       Int
   assignee    String?
   dueDate     DateTime?
@@ -94,6 +95,12 @@ enum TaskStatus {
   TODO
   IN_PROGRESS
   DONE
+}
+
+enum TaskKind {
+  TASK      // обычная задача
+  MEETING   // встреча
+  CALL      // созвон
 }
 
 // ===== Better Auth models =====

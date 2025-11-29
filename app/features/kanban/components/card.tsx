@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { Sheet, SheetContent } from '../../../../components/ui/sheet';
+import { Calendar } from '../../../../components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../../../../components/ui/popover';
 
 const MAX_TITLE_LENGTH = 250;
 
@@ -32,12 +34,42 @@ type CardProps = {
   onUpdateCardTitle: (cardId: string, title: string) => void;
 };
 
+type TaskType = 'task' | 'meeting' | 'call';
+
+const TASK_TYPE_LABELS: Record<TaskType, string> = {
+  task: 'Задача',
+  meeting: 'Встреча',
+  call: 'Созвон',
+};
+
+function formatDateLabel(date?: Date) {
+  if (!date) return 'Выбрать дату';
+  return date.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+function formatTimeValue(date: Date) {
+  const h = date.getHours().toString().padStart(2, '0');
+  const m = date.getMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`;
+}
+
 export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(card.title);
   const [isCompleted, setIsCompleted] = useState(false);
   const [description, setDescription] = useState('');
   const [comment, setComment] = useState('');
+
+  const [taskType, setTaskType] = useState<TaskType>('task');
+
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [startTime, setStartTime] = useState<string>('');
+  const [deadlineDate, setDeadlineDate] = useState<Date | undefined>(undefined);
+  const [deadlineTime, setDeadlineTime] = useState<string>('');
 
   useEffect(() => {
     setDraftTitle(card.title);
@@ -56,6 +88,14 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
         .slice(0, 2) || '?'
     );
   }, [card.title, card.id]);
+
+  function ensureDefaultStart() {
+    if (!startDate) {
+      const now = new Date();
+      setStartDate(now);
+      setStartTime(formatTimeValue(now));
+    }
+  }
 
   function handleSave() {
     const next = draftTitle.trim();
@@ -92,15 +132,15 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
             <div className="text-xs font-medium text-muted-foreground">#{card.id}</div>
           </div>
 
-          {/* Тело: две равные колонки + вертикальный разделитель на всю высоту */}
+          {/* Тело: две равные колонки + вертикальный разделитель */}
           <div className="relative flex flex-1 overflow-hidden">
-            {/* Вертикальный разделитель по центру, от верха тела до низа */}
             <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px bg-border" />
 
-            {/* Левая колонка: инфа о задаче */}
+            {/* Левая колонка */}
             <div className="flex-1">
               <div className="h-full px-6 py-4 overflow-y-auto">
                 <div className="space-y-5">
+                  {/* Кнопки Выполнить / Старт */}
                   <div className="flex items-center gap-3">
                     <Button variant="outline" size="sm" className="h-8 px-4">
                       Выполнить
@@ -110,6 +150,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                     </Button>
                   </div>
 
+                  {/* Заголовок */}
                   <div>
                     <Input
                       value={draftTitle}
@@ -125,6 +166,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                     />
                   </div>
 
+                  {/* Исполнители + тип + Дедлайн (остается наверху) */}
                   <div className="space-y-4 text-xs">
                     <div className="space-y-1">
                       <div className="text-muted-foreground">Исполнители</div>
@@ -133,25 +175,67 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                       </Button>
                     </div>
                     <div className="space-y-1">
-                      <div className="text-muted-foreground">Проекты</div>
-                      <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
-                        Выбрать проект…
-                      </Button>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground">Дата</div>
-                      <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
-                        Выбрать дату…
-                      </Button>
-                    </div>
-                    <div className="space-y-1">
                       <div className="text-muted-foreground">Тип</div>
-                      <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
-                        Действие
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 w-40 justify-between px-3 text-xs"
+                          >
+                            {TASK_TYPE_LABELS[taskType]}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem onClick={() => setTaskType('task')}>
+                            Задача
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setTaskType('meeting')}>
+                            Встреча
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setTaskType('call')}>
+                            Созвон
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    {/* Дедлайн – остается здесь */}
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Дедлайн</div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            {formatDateLabel(deadlineDate)}
+                            {deadlineTime && ` • ${deadlineTime}`}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <div className="flex flex-col gap-2 p-3">
+                            <Calendar
+                              mode="single"
+                              selected={deadlineDate}
+                              onSelect={(date) => setDeadlineDate(date ?? deadlineDate)}
+                            />
+                            <Input
+                              type="time"
+                              value={deadlineTime}
+                              onChange={(e) => setDeadlineTime(e.target.value)}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
 
+                  {/* Описание */}
                   <div className="space-y-2">
                     <div className="text-xs font-medium text-muted-foreground">Описание</div>
                     <Textarea
@@ -160,6 +244,64 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                       placeholder="Опишите задачу подробнее…"
                       className="min-h-[140px] text-sm leading-snug"
                     />
+                  </div>
+
+                  {/* Блок под описанием: Начало, Проект, Создатель */}
+                  <div className="space-y-4 text-xs">
+                    {/* Начало */}
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Начало</div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start text-left font-normal"
+                            onClick={ensureDefaultStart}
+                          >
+                            {formatDateLabel(startDate)}
+                            {startTime && ` • ${startTime}`}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <div className="flex flex-col gap-2 p-3">
+                            <Calendar
+                              mode="single"
+                              selected={startDate}
+                              onSelect={(date) => setStartDate(date ?? startDate)}
+                            />
+                            <Input
+                              type="time"
+                              value={startTime}
+                              onChange={(e) => setStartTime(e.target.value)}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Проект */}
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Проект</div>
+                      <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
+                        Выбрать проект…
+                      </Button>
+                    </div>
+
+                    {/* Создатель (пока read-only) */}
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Создатель</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 justify-start text-xs cursor-default"
+                        disabled
+                      >
+                        Неизвестно
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -209,6 +351,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
         data={card}
         onClick={() => {
           setDraftTitle(card.title);
+          ensureDefaultStart();
           setIsSheetOpen(true);
         }}
         className="space-y-2"
@@ -251,6 +394,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
+                    ensureDefaultStart();
                     setIsSheetOpen(true);
                   }}
                 >
