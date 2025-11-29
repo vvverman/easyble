@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import prisma from '~/lib/prisma';
 
 export async function createTeam(formData: FormData) {
@@ -33,7 +34,6 @@ export async function createTeam(formData: FormData) {
     },
   });
 
-  // Сразу на создание проекта внутри этой команды
   redirect(`/projects/new?team=${team.id}`);
 }
 
@@ -45,23 +45,29 @@ export async function updateTeam(formData: FormData) {
     return;
   }
 
-  await prisma.team.update({
+  // updateMany не кидает ошибку, если запись уже удалена
+  await prisma.team.updateMany({
     where: { id },
     data: { name },
   });
+
+  revalidatePath('/projects');
 }
 
 export async function deleteTeam(formData: FormData) {
   const id = (formData.get('teamId') as string | null)?.trim();
   if (!id) return;
 
-  // Отвязываем проекты от команды, чтобы не упасть по FK
+  // Отвязываем проекты от команды, чтобы не было FK‑конфликтов
   await prisma.project.updateMany({
     where: { teamId: id },
     data: { teamId: null },
   });
 
-  await prisma.team.delete({
+  // Безопасно удаляем команду, даже если её уже нет
+  await prisma.team.deleteMany({
     where: { id },
   });
+
+  revalidatePath('/projects');
 }

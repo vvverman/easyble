@@ -43,7 +43,6 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
     router.push("/onboarding/team")
   }
 
-  // Если команд ещё нет — показываем большую кнопку создания
   if (!teams || teams.length === 0) {
     return (
       <SidebarMenu>
@@ -180,7 +179,13 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
               <DialogTitle>Team settings</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <form action={updateTeam} className="space-y-3">
+              <form
+                action={async (formData: FormData) => {
+                  await updateTeam(formData)
+                  setTeamDialog(null)
+                }}
+                className="space-y-3"
+              >
                 <input
                   type="hidden"
                   name="teamId"
@@ -217,7 +222,12 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
                 </DialogFooter>
               </form>
 
-              <form action={deleteTeam}>
+              <form
+                action={async (formData: FormData) => {
+                  await deleteTeam(formData)
+                  setTeamDialog(null)
+                }}
+              >
                 <input
                   type="hidden"
                   name="teamId"

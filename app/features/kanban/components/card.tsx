@@ -167,7 +167,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                     />
                   </div>
 
-                  {/* Исполнители + тип + Дедлайн (остается наверху) */}
+                  {/* Исполнители + тип + Дедлайн */}
                   <div className="space-y-4 text-xs">
                     <div className="space-y-1">
                       <div className="text-muted-foreground">Исполнители</div>
@@ -202,7 +202,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                       </DropdownMenu>
                     </div>
 
-                    {/* Дедлайн – остается здесь */}
+                    {/* Дедлайн */}
                     <div className="space-y-1">
                       <div className="text-muted-foreground">Дедлайн</div>
                       <Popover>
@@ -247,9 +247,8 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                     />
                   </div>
 
-                  {/* Блок под описанием: Начало, Проект, Создатель */}
+                  {/* Начало / Проект / Создатель */}
                   <div className="space-y-4 text-xs">
-                    {/* Начало */}
                     <div className="space-y-1">
                       <div className="text-muted-foreground">Начало</div>
                       <Popover>
@@ -283,7 +282,6 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                       </Popover>
                     </div>
 
-                    {/* Проект */}
                     <div className="space-y-1">
                       <div className="text-muted-foreground">Проект</div>
                       <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
@@ -291,7 +289,6 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                       </Button>
                     </div>
 
-                    {/* Создатель (пока read-only) */}
                     <div className="space-y-1">
                       <div className="text-muted-foreground">Создатель</div>
                       <Button
@@ -367,11 +364,19 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
 
         <div className="mt-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
                 setIsCompleted((prev) => !prev);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsCompleted((prev) => !prev);
+                }
               }}
               className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${
                 isCompleted
@@ -383,7 +388,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                 size={10}
                 className={isCompleted ? '' : 'text-muted-foreground/60'}
               />
-            </button>
+            </div>
             <span className="text-[11px] font-medium text-muted-foreground">
               #{card.displayId}
             </span>
