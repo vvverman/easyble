@@ -94,7 +94,11 @@ export function KanbanColumn({
   }
 
   return (
-    <KanbanBoardColumn columnId={column.id} onDropOverColumn={handleDropOverColumn}>
+    <KanbanBoardColumn
+      columnId={column.id}
+      onDropOverColumn={handleDropOverColumn}
+      className="w-[290px]"
+    >
       <KanbanBoardColumnHeader>
         {isEditingTitle ? (
           <form
