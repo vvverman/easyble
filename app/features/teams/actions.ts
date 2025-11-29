@@ -36,3 +36,32 @@ export async function createTeam(formData: FormData) {
   // Сразу на создание проекта внутри этой команды
   redirect(`/projects/new?team=${team.id}`);
 }
+
+export async function updateTeam(formData: FormData) {
+  const id = (formData.get('teamId') as string | null)?.trim();
+  const name = (formData.get('name') as string | null)?.trim();
+
+  if (!id || !name) {
+    return;
+  }
+
+  await prisma.team.update({
+    where: { id },
+    data: { name },
+  });
+}
+
+export async function deleteTeam(formData: FormData) {
+  const id = (formData.get('teamId') as string | null)?.trim();
+  if (!id) return;
+
+  // Отвязываем проекты от команды, чтобы не упасть по FK
+  await prisma.project.updateMany({
+    where: { teamId: id },
+    data: { teamId: null },
+  });
+
+  await prisma.team.delete({
+    where: { id },
+  });
+}

@@ -46,12 +46,41 @@ export async function deleteColumn(columnId: string) {
 // --- Tasks ---
 
 export async function addTask(columnId: string, content: string) {
-  const count = await prisma.task.count({ where: { columnId } });
   const { title, description } = splitTaskContent(content);
 
   if (!title) {
     return;
   }
+
+  const columnWithBoard = await prisma.column.findUnique({
+    where: { id: columnId },
+    include: {
+      board: true,
+    },
+  });
+
+  if (!columnWithBoard) {
+    return;
+  }
+
+  const projectId = columnWithBoard.board.projectId;
+
+  const { _max } = await prisma.task.aggregate({
+    where: {
+      column: {
+        board: {
+          projectId,
+        },
+      },
+    },
+    _max: {
+      projectTaskNumber: true,
+    },
+  });
+
+  const nextProjectTaskNumber = (_max.projectTaskNumber ?? 0) + 1;
+
+  const count = await prisma.task.count({ where: { columnId } });
 
   await prisma.task.create({
     data: {
@@ -60,6 +89,7 @@ export async function addTask(columnId: string, content: string) {
       description,
       order: count,
       status: 'TODO',
+      projectTaskNumber: nextProjectTaskNumber,
     },
   });
   revalidatePath('/projects/[projectId]');

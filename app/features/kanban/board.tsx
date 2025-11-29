@@ -25,6 +25,7 @@ type Card = {
   id: string;
   title: string;
   order: number;
+  displayId: string;
 };
 
 type Column = {
@@ -51,6 +52,7 @@ export default function KanbanBoardWrapper({ project, boardId, columns }: { proj
       id: t.id,
       title: t.title,
       order: t.order,
+      displayId: `${project.number}-${t.projectTaskNumber}`,
     })),
   }));
 

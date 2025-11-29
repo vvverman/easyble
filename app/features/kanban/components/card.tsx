@@ -26,6 +26,7 @@ type Card = {
   id: string;
   title: string;
   order: number;
+  displayId: string;
 };
 
 type CardProps = {
@@ -76,7 +77,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
   }, [card.title]);
 
   const initials = useMemo(() => {
-    const src = card.title || card.id;
+    const src = card.title || card.displayId;
     return (
       src
         .trim()
@@ -87,7 +88,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
         .toUpperCase()
         .slice(0, 2) || '?'
     );
-  }, [card.title, card.id]);
+  }, [card.title, card.displayId]);
 
   function ensureDefaultStart() {
     if (!startDate) {
@@ -129,7 +130,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
         >
           {/* Хедер */}
           <div className="border-b px-6 py-3">
-            <div className="text-xs font-medium text-muted-foreground">#{card.id}</div>
+            <div className="text-xs font-medium text-muted-foreground">#{card.displayId}</div>
           </div>
 
           {/* Тело: две равные колонки + вертикальный разделитель */}
@@ -365,20 +366,28 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
         </KanbanBoardCardDescription>
 
         <div className="mt-1 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsCompleted((prev) => !prev);
-            }}
-            className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${
-              isCompleted
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-muted-foreground/40 text-muted-foreground'
-            }`}
-          >
-            {isCompleted && <CheckIcon size={10} />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsCompleted((prev) => !prev);
+              }}
+              className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${
+                isCompleted
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-muted-foreground/40 bg-background text-muted-foreground'
+              }`}
+            >
+              <CheckIcon
+                size={10}
+                className={isCompleted ? '' : 'text-muted-foreground/60'}
+              />
+            </button>
+            <span className="text-[11px] font-medium text-muted-foreground">
+              #{card.displayId}
+            </span>
+          </div>
 
           <div className="flex items-center gap-2">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-medium text-primary-foreground">

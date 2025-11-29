@@ -35,6 +35,7 @@ model Team {
 
 model Project {
   id        String   @id @default(cuid())
+  number    Int      @default(autoincrement())
   title     String
   icon      String   @default("FolderKanban")
   owner     User     @relation(fields: [ownerId], references: [id])
@@ -44,6 +45,7 @@ model Project {
   boards    Board[]
   createdAt DateTime @default(now())
 
+  @@unique([number])
   @@index([ownerId])
   @@index([teamId])
 }
@@ -73,20 +75,21 @@ model Column {
 }
 
 model Task {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  status      TaskStatus @default(TODO)
-  kind        TaskKind   @default(TASK)
-  order       Int
-  assignee    String?
-  dueDate     DateTime?
-  startAt     DateTime?
-  endAt       DateTime?
-  column      Column     @relation(fields: [columnId], references: [id])
-  columnId    String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id                 String     @id @default(cuid())
+  title              String
+  description        String?
+  status             TaskStatus @default(TODO)
+  kind               TaskKind   @default(TASK)
+  order              Int
+  projectTaskNumber  Int        @default(0)
+  assignee           String?
+  dueDate            DateTime?
+  startAt            DateTime?
+  endAt              DateTime?
+  column             Column     @relation(fields: [columnId], references: [id])
+  columnId           String
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 
   @@index([columnId])
 }
