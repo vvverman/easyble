@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 
-const MAX_TITLE_LENGTH = 1024;
+const MAX_TITLE_LENGTH = 250;
 
 type Card = {
   id: string;
@@ -164,7 +164,6 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
         }}
         className="space-y-2"
       >
-        {/* текст сверху */}
         <KanbanBoardCardDescription
           className={`break-words text-xs leading-snug ${
             isCompleted ? 'text-muted-foreground line-through' : ''
@@ -173,22 +172,24 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
           {card.title}
         </KanbanBoardCardDescription>
 
-        {/* иконки внизу: слева чекбокс, справа аватар + меню */}
         <div className="mt-1 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsCompleted((prev) => !prev);
-            }}
-            className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${
-              isCompleted
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-muted-foreground/40 text-muted-foreground'
-            }`}
-          >
-            {isCompleted && <CheckIcon size={10} />}
-          </button>
+          {/* галочка + оставшиеся символы */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsCompleted((prev) => !prev);
+              }}
+              className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${
+                isCompleted
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-muted-foreground/40 text-muted-foreground'
+              }`}
+            >
+              {isCompleted && <CheckIcon size={10} />}
+            </button>
+          </div>
 
           <div className="flex items-center gap-2">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-medium text-primary-foreground">
