@@ -164,68 +164,63 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
         }}
         className="space-y-2"
       >
-        <div className="flex items-start gap-3">
-          {/* чекбокс слева */}
+        {/* текст сверху */}
+        <KanbanBoardCardDescription
+          className={`break-words text-xs leading-snug ${
+            isCompleted ? 'text-muted-foreground line-through' : ''
+          }`}
+        >
+          {card.title}
+        </KanbanBoardCardDescription>
+
+        {/* иконки внизу: слева чекбокс, справа аватар + меню */}
+        <div className="mt-1 flex items-center justify-between">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               setIsCompleted((prev) => !prev);
             }}
-            className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full border transition-colors ${
+            className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${
               isCompleted
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-muted-foreground/40 text-muted-foreground'
             }`}
           >
-            {isCompleted && <CheckIcon size={14} />}
+            {isCompleted && <CheckIcon size={10} />}
           </button>
 
-          {/* текст задачи */}
-          <div className="flex-1">
-            <KanbanBoardCardDescription
-              className={`break-words text-xs leading-snug ${
-                isCompleted ? 'text-muted-foreground line-through' : ''
-              }`}
-            >
-              {card.title}
-            </KanbanBoardCardDescription>
-          </div>
-
-          {/* меню справа */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <KanbanBoardCardButton className="ml-1 p-0 text-muted-foreground hover:text-foreground">
-                <MoreVerticalIcon size={16} />
-              </KanbanBoardCardButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsDialogOpen(true);
-                }}
-              >
-                Изменить
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteCard(card.id);
-                }}
-              >
-                <Trash2Icon className="mr-2 h-4 w-4" />
-                Удалить
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* аватар автора снизу справа */}
-        <div className="mt-1 flex justify-end">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-            {initials}
+          <div className="flex items-center gap-2">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-medium text-primary-foreground">
+              {initials}
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <KanbanBoardCardButton className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground">
+                  <MoreVerticalIcon size={14} />
+                </KanbanBoardCardButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDialogOpen(true);
+                  }}
+                >
+                  Изменить
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteCard(card.id);
+                  }}
+                >
+                  <Trash2Icon className="mr-2 h-4 w-4" />
+                  Удалить
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </KanbanBoardCard>
