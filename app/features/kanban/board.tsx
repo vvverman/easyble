@@ -113,6 +113,16 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
   };
 
   const handleUpdateCardTitle = (cardId: string, cardTitle: string) => {
+    // оптимистично обновляем локальный стейт, чтобы сразу увидеть новый заголовок
+    setColumns((previousColumns) =>
+      previousColumns.map((column) => ({
+        ...column,
+        items: column.items.map((item) =>
+          item.id === cardId ? { ...item, title: cardTitle } : item,
+        ),
+      })),
+    );
+
     startTransition(async () => {
       await updateTaskTitle(cardId, cardTitle);
     });
@@ -152,7 +162,6 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
         jsLoaded ? (
           <KanbanColumn
             key={column.id}
-            column={column}
             column={column}
             onAddCard={handleAddCard}
             onDeleteCard={handleDeleteCard}

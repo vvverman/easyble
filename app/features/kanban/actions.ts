@@ -95,17 +95,18 @@ export async function addTask(columnId: string, content: string) {
   revalidatePath('/projects/[projectId]');
 }
 
-export async function updateTaskTitle(taskId: string, content: string) {
-  const { title, description } = splitTaskContent(content);
-
-  if (!title) {
+// Обновляем ТОЛЬКО заголовок задачи, не трогая description
+export async function updateTaskTitle(taskId: string, title: string) {
+  const trimmed = (title ?? '').trim();
+  if (!trimmed) {
     return;
   }
 
   await prisma.task.update({
     where: { id: taskId },
-    data: { title, description },
+    data: { title: trimmed },
   });
+
   revalidatePath('/projects/[projectId]');
 }
 

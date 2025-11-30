@@ -72,8 +72,11 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
   const [deadlineDate, setDeadlineDate] = useState<Date | undefined>(undefined);
   const [deadlineTime, setDeadlineTime] = useState<string>('');
 
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+
   useEffect(() => {
     setDraftTitle(card.title);
+    setIsEditingTitle(false);
   }, [card.title]);
 
   const initials = useMemo(() => {
@@ -103,7 +106,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
     if (next && next !== card.title) {
       onUpdateCardTitle(card.id, next);
     }
-    setIsSheetOpen(false);
+    setIsEditingTitle(false);
   }
 
   function handleTitleChange(value: string) {
@@ -153,18 +156,33 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
 
                   {/* Заголовок */}
                   <div>
-                    <Input
-                      value={draftTitle}
-                      onChange={(e) => handleTitleChange(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSave();
-                        }
-                      }}
-                      className="text-sm font-medium leading-snug"
-                      placeholder="Название задачи"
-                    />
+                    {isEditingTitle ? (
+                      <Textarea
+                        value={draftTitle}
+                        autoFocus
+                        rows={3}
+                        onChange={(e) => handleTitleChange(e.target.value)}
+                        onBlur={handleSave}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSave();
+                          }
+                        }}
+                        className="min-h-[72px] break-all text-base font-semibold leading-snug"
+                        placeholder="Название задачи"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingTitle(true)}
+                        className="flex w-full items-start rounded-md px-1 py-1 text-left hover:bg-muted/60"
+                      >
+                        <span className="break-all text-base font-semibold leading-snug">
+                          {draftTitle || 'Название задачи'}
+                        </span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Исполнители + тип + Дедлайн */}
@@ -243,7 +261,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Опишите задачу подробнее…"
-                      className="min-h-[140px] text-sm leading-snug"
+                      className="min-h-[140px] break-all text-sm leading-snug"
                     />
                   </div>
 
@@ -324,7 +342,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Комментарий…"
-                    className="min-h-[80px] text-sm leading-snug"
+                    className="min-h-[80px] break-all text-sm leading-snug"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -350,12 +368,13 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
         onClick={() => {
           setDraftTitle(card.title);
           ensureDefaultStart();
+          setIsEditingTitle(false);
           setIsSheetOpen(true);
         }}
         className="space-y-2"
       >
         <KanbanBoardCardDescription
-          className={`break-words text-xs leading-snug ${
+          className={`break-all text-xs leading-snug ${
             isCompleted ? 'text-muted-foreground line-through' : ''
           }`}
         >
@@ -409,6 +428,8 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                   onClick={(e) => {
                     e.stopPropagation();
                     ensureDefaultStart();
+                    setDraftTitle(card.title);
+                    setIsEditingTitle(false);
                     setIsSheetOpen(true);
                   }}
                 >
