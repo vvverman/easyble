@@ -33,6 +33,7 @@ type CardProps = {
   card: Card;
   onDeleteCard: (cardId: string) => void;
   onUpdateCardTitle: (cardId: string, title: string) => void;
+  onCompleteCard: (cardId: string) => void;
 };
 
 type TaskType = 'task' | 'meeting' | 'call';
@@ -58,7 +59,7 @@ function formatTimeValue(date: Date) {
   return `${h}:${m}`;
 }
 
-export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps) {
+export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCard }: CardProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(card.title);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -129,6 +130,11 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
     setComment('');
   }
 
+  function handleCompleteClick() {
+    onCompleteCard(card.id);
+    setIsSheetOpen(false);
+  }
+
   return (
     <>
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -151,10 +157,16 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                 <div className="space-y-5">
                   {/* Кнопки Выполнить / Старт */}
                   <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="h-8 px-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-4"
+                      type="button"
+                      onClick={handleCompleteClick}
+                    >
                       Выполнить
                     </Button>
-                    <Button size="sm" className="h-8 px-4">
+                    <Button size="sm" className="h-8 px-4" type="button">
                       Старт
                     </Button>
                   </div>

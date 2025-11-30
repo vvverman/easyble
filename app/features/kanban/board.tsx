@@ -18,7 +18,8 @@ import {
   addTask, 
   updateTaskTitle, 
   deleteTask, 
-  moveTask 
+  moveTask,
+  completeTask,
 } from './actions';
 
 type Card = {
@@ -151,6 +152,20 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
     });
   };
 
+  const handleCompleteCard = (cardId: string) => {
+    // оптимистично убираем задачу с доски
+    setColumns((previousColumns) =>
+      previousColumns.map((column) => ({
+        ...column,
+        items: column.items.filter((item) => item.id !== cardId),
+      })),
+    );
+
+    startTransition(async () => {
+      await completeTask(cardId);
+    });
+  };
+
   const jsLoaded = useJsLoaded();
 
   return (
@@ -169,6 +184,7 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
             onMoveCardToColumn={handleMoveCardToColumn}
             onUpdateCardTitle={handleUpdateCardTitle}
             onUpdateColumnTitle={handleUpdateColumnTitle}
+            onCompleteCard={handleCompleteCard}
           />
         ) : (
           <KanbanBoardColumnSkeleton key={column.id} />

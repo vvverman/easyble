@@ -86,6 +86,7 @@ model Task {
   dueDate            DateTime?
   startAt            DateTime?
   endAt              DateTime?
+  archived           Boolean    @default(false)
   column             Column     @relation(fields: [columnId], references: [id])
   columnId           String
   createdAt          DateTime   @default(now())

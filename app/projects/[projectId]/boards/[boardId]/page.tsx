@@ -56,6 +56,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
       columns: {
         include: {
           tasks: {
+            where: { archived: false },
             orderBy: { order: "asc" },
           },
         },

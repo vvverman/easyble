@@ -46,6 +46,7 @@ type ColumnProps = {
   onMoveCardToColumn: (columnId: string, index: number, card: Card) => void;
   onUpdateCardTitle: (cardId: string, title: string) => void;
   onUpdateColumnTitle: (columnId: string, title: string) => void;
+  onCompleteCard: (cardId: string) => void;
   onDragCancel: (cardId: string) => void;
   onDragEnd: (cardId: string, overId: string) => void;
 };
@@ -58,6 +59,7 @@ export function KanbanColumn({
   onMoveCardToColumn,
   onUpdateCardTitle,
   onUpdateColumnTitle,
+  onCompleteCard,
   onDragCancel,
   onDragEnd,
 }: ColumnProps) {
@@ -171,6 +173,7 @@ export function KanbanColumn({
                   card={card}
                   onDeleteCard={onDeleteCard}
                   onUpdateCardTitle={onUpdateCardTitle}
+                  onCompleteCard={onCompleteCard}
                 />
               </KanbanBoardColumnListItem>
             ))}

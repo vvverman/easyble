@@ -80,18 +80,27 @@ export async function addTask(columnId: string, content: string) {
 
   const nextProjectTaskNumber = (_max.projectTaskNumber ?? 0) + 1;
 
-  const count = await prisma.task.count({ where: { columnId } });
+  // Новая задача вверху колонки:
+  // 1) увеличиваем order у всех существующих задач
+  // 2) создаём новую с order = 0
+  await prisma.$transaction(async (tx) => {
+    await tx.task.updateMany({
+      where: { columnId },
+      data: { order: { increment: 1 } },
+    });
 
-  await prisma.task.create({
-    data: {
-      columnId,
-      title,
-      description,
-      order: count,
-      status: 'TODO',
-      projectTaskNumber: nextProjectTaskNumber,
-    },
+    await tx.task.create({
+      data: {
+        columnId,
+        title,
+        description,
+        order: 0,
+        status: 'TODO',
+        projectTaskNumber: nextProjectTaskNumber,
+      },
+    });
   });
+
   revalidatePath('/projects/[projectId]');
 }
 
@@ -148,6 +157,86 @@ export async function updateTaskDetails(
 export async function deleteTask(taskId: string) {
   await prisma.task.delete({ where: { id: taskId } });
   revalidatePath('/projects/[projectId]');
+}
+
+// Завершение задачи: статус DONE + перенос в Done-колонку или архив
+export async function completeTask(taskId: string) {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: {
+      column: {
+        include: {
+          board: {
+            include: { columns: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!task) return;
+
+  const projectId = task.column.board.projectId;
+  const boardColumns = task.column.board.columns;
+
+  const doneColumn = boardColumns.find((c) => {
+    const t = c.title.toLowerCase();
+    return (
+      t === 'done' ||
+      t === 'готово' ||
+      t === 'выполнено' ||
+      t === 'завершено'
+    );
+  });
+
+  // Если колонки Done нет — просто архивируем задачу
+  if (!doneColumn) {
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        status: 'DONE',
+        archived: true,
+        endAt: new Date(),
+      },
+    });
+    revalidatePath(`/projects/${projectId}`);
+    return;
+  }
+
+  // Если колонка Done есть — двигаем задачу в неё наверх
+  await prisma.$transaction(async (tx) => {
+    const current = await tx.task.findUnique({ where: { id: taskId } });
+    if (!current) return;
+
+    const oldColumnId = current.columnId;
+    const oldOrder = current.order;
+
+    // Сдвигаем задачи в старой колонке
+    await tx.task.updateMany({
+      where: { columnId: oldColumnId, order: { gt: oldOrder } },
+      data: { order: { decrement: 1 } },
+    });
+
+    // Освобождаем место сверху в Done-колонке
+    await tx.task.updateMany({
+      where: { columnId: doneColumn.id },
+      data: { order: { increment: 1 } },
+    });
+
+    // Переносим задачу в Done c order = 0
+    await tx.task.update({
+      where: { id: taskId },
+      data: {
+        columnId: doneColumn.id,
+        order: 0,
+        status: 'DONE',
+        archived: false,
+        endAt: new Date(),
+      },
+    });
+  });
+
+  revalidatePath(`/projects/${projectId}`);
 }
 
 export async function moveTask(
