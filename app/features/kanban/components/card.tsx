@@ -93,6 +93,11 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
     );
   }, [card.title, card.displayId]);
 
+  const remainingTitle = useMemo(
+    () => Math.max(0, MAX_TITLE_LENGTH - draftTitle.length),
+    [draftTitle],
+  );
+
   function ensureDefaultStart() {
     if (!startDate) {
       const now = new Date();
@@ -155,23 +160,30 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle }: CardProps)
                   </div>
 
                   {/* Заголовок */}
-                  <div>
+                  <div className="space-y-1">
                     {isEditingTitle ? (
-                      <Textarea
-                        value={draftTitle}
-                        autoFocus
-                        rows={3}
-                        onChange={(e) => handleTitleChange(e.target.value)}
-                        onBlur={handleSave}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSave();
-                          }
-                        }}
-                        className="min-h-[72px] break-all text-base font-semibold leading-snug"
-                        placeholder="Название задачи"
-                      />
+                      <>
+                        <Textarea
+                          value={draftTitle}
+                          autoFocus
+                          rows={3}
+                          onChange={(e) => handleTitleChange(e.target.value)}
+                          onBlur={handleSave}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSave();
+                            }
+                          }}
+                          className="min-h-[72px] break-all text-base font-semibold leading-snug"
+                          placeholder="Название задачи"
+                        />
+                        <div className="flex justify-end">
+                          <span className="text-[10px] text-muted-foreground">
+                            {remainingTitle}
+                          </span>
+                        </div>
+                      </>
                     ) : (
                       <button
                         type="button"
