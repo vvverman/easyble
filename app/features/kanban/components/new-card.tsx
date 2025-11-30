@@ -2,9 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { CheckIcon, MoreVerticalIcon } from 'lucide-react';
-import {
-  KanbanBoardCard,
-} from '@/new-york/ui/kanban';
+import { KanbanBoardCard } from '@/new-york/ui/kanban';
 import { Input } from '~/components/ui/input';
 import {
   DropdownMenu,
@@ -27,14 +25,16 @@ export function NewCardForm({ columnId, onAddCard, onCancel }: NewCardFormProps)
 
   const initials = useMemo(() => {
     const src = content || '??';
-    return src
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((p) => p[0] || '')
-      .join('')
-      .toUpperCase()
-      .slice(0, 2) || '?';
+    return (
+      src
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((p) => p[0] || '')
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || '?'
+    );
   }, [content]);
 
   function handleChange(value: string) {
@@ -58,8 +58,7 @@ export function NewCardForm({ columnId, onAddCard, onCancel }: NewCardFormProps)
 
   return (
     <form className="px-2 pt-1" onSubmit={submitNewCard}>
-      <KanbanBoardCard data={{ id: 'new', title: content || 'Новая задача', order: 0 }} className="space-y-2">
-        {/* текст как инпут без рамок */}
+      <KanbanBoardCard data={{ id: 'new' }} className="space-y-2">
         <Input
           autoFocus
           value={content}
@@ -73,11 +72,10 @@ export function NewCardForm({ columnId, onAddCard, onCancel }: NewCardFormProps)
               onCancel();
             }
           }}
-          placeholder=""
+          placeholder="Новая задача"
           className="h-auto border-none bg-transparent p-0 text-xs leading-snug shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />
 
-        {/* нижняя строка: галочка + счётчик слева, аватар + меню справа */}
         <div className="mt-1 flex items-center justify-between">
           <div className="flex items-center gap-1">
             <button

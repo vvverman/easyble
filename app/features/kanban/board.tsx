@@ -22,6 +22,19 @@ import {
   completeTask,
 } from './actions';
 
+type KanbanColor =
+  | 'blue'
+  | 'yellow'
+  | 'green'
+  | 'primary'
+  | 'cyan'
+  | 'gray'
+  | 'indigo'
+  | 'pink'
+  | 'purple'
+  | 'red'
+  | 'violet';
+
 type Card = {
   id: string;
   title: string;
@@ -32,7 +45,7 @@ type Card = {
 type Column = {
   id: string;
   title: string;
-  color: string;
+  color: KanbanColor;
   items: Card[];
   order: number;
 };
@@ -43,11 +56,19 @@ type BoardProps = {
   initialColumns: Column[];
 };
 
-export default function KanbanBoardWrapper({ project, boardId, columns }: { project: any; boardId: string; columns: any[] }) {
-  const uiColumns = columns.map((c: any) => ({
+export default function KanbanBoardWrapper({
+  project,
+  boardId,
+  columns,
+}: {
+  project: any;
+  boardId: string;
+  columns: any[];
+}) {
+  const uiColumns: Column[] = columns.map((c: any) => ({
     id: c.id,
     title: c.title,
-    color: c.color,
+    color: (c.color ?? 'primary') as KanbanColor,
     order: c.order,
     items: c.tasks.map((t: any) => ({
       id: t.id,
@@ -59,7 +80,11 @@ export default function KanbanBoardWrapper({ project, boardId, columns }: { proj
 
   return (
     <KanbanBoardProvider>
-      <ProjectKanbanBoard projectId={project.id} boardId={boardId} initialColumns={uiColumns} />
+      <ProjectKanbanBoard
+        projectId={project.id}
+        boardId={boardId}
+        initialColumns={uiColumns}
+      />
     </KanbanBoardProvider>
   );
 }
@@ -114,7 +139,6 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
   };
 
   const handleUpdateCardTitle = (cardId: string, cardTitle: string) => {
-    // оптимистично обновляем локальный стейт, чтобы сразу увидеть новый заголовок
     setColumns((previousColumns) =>
       previousColumns.map((column) => ({
         ...column,
@@ -153,7 +177,6 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
   };
 
   const handleCompleteCard = (cardId: string) => {
-    // оптимистично убираем задачу с доски
     setColumns((previousColumns) =>
       previousColumns.map((column) => ({
         ...column,
@@ -166,13 +189,14 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
     });
   };
 
+  const handleDragCancel = (cardId: string) => {};
+
+  const handleDragEnd = (cardId: string, overId: string) => {};
+
   const jsLoaded = useJsLoaded();
 
   return (
-    <KanbanBoard
-      ref={scrollContainerReference}
-      className="h-full"
-    >
+    <KanbanBoard ref={scrollContainerReference} className="h-full">
       {columns.map((column: Column) =>
         jsLoaded ? (
           <KanbanColumn
@@ -185,6 +209,8 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
             onUpdateCardTitle={handleUpdateCardTitle}
             onUpdateColumnTitle={handleUpdateColumnTitle}
             onCompleteCard={handleCompleteCard}
+            onDragCancel={handleDragCancel}
+            onDragEnd={handleDragEnd}
           />
         ) : (
           <KanbanBoardColumnSkeleton key={column.id} />

@@ -24,16 +24,30 @@ import { KanbanCard } from './card';
 import { NewCardForm } from './new-card';
 import SimpleBar from 'simplebar-react';
 
+type KanbanColor =
+  | 'blue'
+  | 'yellow'
+  | 'green'
+  | 'primary'
+  | 'cyan'
+  | 'gray'
+  | 'indigo'
+  | 'pink'
+  | 'purple'
+  | 'red'
+  | 'violet';
+
 type Card = {
   id: string;
   title: string;
   order: number;
+  displayId: string;
 };
 
 type Column = {
   id: string;
   title: string;
-  color: string;
+  color: KanbanColor;
   items: Card[];
   order: number;
 };
@@ -122,7 +136,7 @@ export function KanbanColumn({
         ) : (
           <>
             <KanbanBoardColumnTitle columnId={column.id}>
-              <KanbanColorCircle color={column.color || 'primary'} />
+              <KanbanColorCircle color={column.color} />
               {column.title}
             </KanbanBoardColumnTitle>
             <div className="flex items-center gap-1">
