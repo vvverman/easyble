@@ -18,29 +18,29 @@ const featureIconMap = {
 
 const features = {
   'zero-dependencies': {
-    title: 'Zero-Dependencies',
+    title: 'Эмпатичные формулировки',
     description:
-      'No extra libraries. Just plain React. Drop it into your project and start dragging and dropping.',
+      'Easyble подсказывает мягкие и уважительные варианты, когда вы пишете задачи и комментарии, чтобы в тексте было меньше резкости и больше ясности.',
   },
   'css-performance': {
-    title: 'CSS & Performance Assurance',
+    title: 'Забота о команде',
     description:
-      'Comes with a hook to toggle between a skeleton loader and the board, ensuring styles and scripts are loaded before interaction for a snappy, flicker-free experience.',
+      'Структура карточек помогает учитывать контекст, нагрузку и договорённости, а не только дедлайны и статус задачи.',
   },
   accessibility: {
-    title: 'Accessibility-First',
+    title: 'ИИ как бережный помощник',
     description:
-      'Built-in keyboard controls and screen-reader announcements ensure everyone can manage tasks.',
+      'Искусственный интеллект помогает переформулировать задачи и уточнить детали, но не навязывает решения и не подменяет живое общение.',
   },
   theming: {
-    title: 'Seamless Theming',
+    title: 'Лёгкий фокус на важном',
     description:
-      'Automatically adapts to your Shadcn color scheme for perfect visual integration with light an dark mode.',
+      'Интерфейс устроен так, чтобы не перегружать внимание: минимум визуального шума, максимум фокуса на следующем шаге команды.',
   },
   'framework-agnostic': {
-    title: 'Framework-Agnostic',
+    title: 'Привычные процессы, новый тон',
     description:
-      'Works equally well with local state, React Router v7 actions, or Next.js server actions, and so on ... No lock-in!',
+      'Вы по-прежнему планируете спринты и ведёте колонки, просто делаете это по‑человечески — без пассивной агрессии и микроменеджмента.',
   },
 };
 
@@ -55,16 +55,17 @@ export function Description() {
           <div className="lg:pr-8">
             <div className="lg:max-w-xl">
               <h2 className="text-primary text-base font-semibold">
-                Why choose this Kanban Board?
+                Почему командам нравится Easyble
               </h2>
 
               <p className="text-foreground mt-2 text-4xl font-semibold tracking-tight text-pretty sm:text-5xl">
-                Easily customize this Kanban board
+                Таск‑менеджер с эмпатией по умолчанию
               </p>
 
               <p className="text-muted-foreground mt-6 text-lg/8">
-                Get up and running in minutes with a production-ready,
-                accessible, and themeable Kanban board built on Shadcn/UI.
+                Easyble помогает писать задачи так, чтобы их хотелось читать:
+                без наездов, недосказанности и лишнего стресса. Это рабочее
+                пространство, где уважение встроено в процесс.
               </p>
 
               <dl className="text-muted-foreground mt-10 max-w-xl space-y-8 text-base/7 lg:max-w-none">
@@ -89,7 +90,7 @@ export function Description() {
           </div>
 
           <img
-            alt="Kanban Board screenshot (light)"
+            alt="Доска задач Easyble (светлая тема)"
             className={cn(imageClassNames, 'dark:hidden')}
             height={1442}
             src="/images/app-light.png"
@@ -97,7 +98,7 @@ export function Description() {
           />
 
           <img
-            alt="Kanban Board screenshot (dark)"
+            alt="Доска задач Easyble (тёмная тема)"
             className={cn(imageClassNames, 'hidden dark:block')}
             height={1442}
             src="/images/app-dark.png"

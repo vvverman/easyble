@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { SquareKanbanIcon } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import type { ComponentProps } from 'react';
 
 import { Button, buttonVariants } from '~/components/ui/button';
@@ -27,6 +27,7 @@ import { authClient } from '@/lib/auth-client';
 
 export function Header({ className, ...props }: ComponentProps<'header'>) {
   const pathname = usePathname();
+  const router = useRouter();
   const isExampleActive = pathname === '/example';
 
   const { data: session, isPending } = authClient.useSession();
@@ -43,7 +44,13 @@ export function Header({ className, ...props }: ComponentProps<'header'>) {
 
   const handleSignOut = async () => {
     try {
-      await authClient.signOut();
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.push('/');
+          },
+        },
+      });
     } catch (error) {
       console.error('Sign out failed', error);
     }
@@ -65,7 +72,13 @@ export function Header({ className, ...props }: ComponentProps<'header'>) {
           href="/"
         >
           <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md sm:size-6">
-            <SquareKanbanIcon className="size-6 sm:size-4" />
+            <Image
+              src="/favicon.ico"
+              alt="Easyble"
+              width={24}
+              height={24}
+              className="rounded-md sm:size-4"
+            />
           </div>
 
           <span className="hidden font-mono sm:block">Easyble</span>
@@ -79,7 +92,7 @@ export function Header({ className, ...props }: ComponentProps<'header'>) {
               isExampleActive && 'bg-accent text-primary',
             )}
           >
-            Example
+            Доска
           </Link>
         </nav>
 

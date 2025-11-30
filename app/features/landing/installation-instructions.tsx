@@ -1,33 +1,15 @@
-import { CodeBlockCommand } from '~/components/code-block-command';
-
 export function InstallationInstructions() {
   return (
-    <section className="mx-auto flex max-w-xl flex-col">
-      <h2 className="text-primary mb-10 text-center text-3xl font-semibold">
-        Installation
+    <section className="mx-auto flex max-w-xl flex-col gap-4 py-16">
+      <h2 className="text-primary mb-4 text-center text-3xl font-semibold">
+        Как начать использовать Easyble
       </h2>
 
-      <h3 className="text-muted-foreground mb-6 text-xl font-semibold">
-        Install the Kanban Board:
-      </h3>
-
-      <CodeBlockCommand
-        __npmCommand__="npx shadcn@latest add https://shadcn-kanban-board.com/r/kanban.json"
-        __yarnCommand__="yarn dlx shadcn@latest add https://shadcn-kanban-board.com/r/kanban.json"
-        __pnpmCommand__="pnpm dlx shadcn@latest add https://shadcn-kanban-board.com/r/kanban.json"
-        __bunCommand__="bunx shadcn@latest add https://shadcn-kanban-board.com/r/kanban.json"
-      />
-
-      <h3 className="text-muted-foreground mt-8 mb-6 text-xl font-semibold">
-        Install the use-js-loaded hook:
-      </h3>
-
-      <CodeBlockCommand
-        __npmCommand__="npx shadcn@latest add https://shadcn-kanban-board.com/r/use-js-loaded.json"
-        __yarnCommand__="yarn dlx shadcn@latest add https://shadcn-kanban-board.com/r/use-js-loaded.json"
-        __pnpmCommand__="pnpm dlx shadcn@latest add https://shadcn-kanban-board.com/r/use-js-loaded.json"
-        __bunCommand__="bunx shadcn@latest add https://shadcn-kanban-board.com/r/use-js-loaded.json"
-      />
+      <p className="text-muted-foreground text-lg text-center">
+        Easyble задуман как рабочее пространство, где задачи пишутся бережно, а
+        атмосфера в команде становится легче. Просто войдите в аккаунт, создайте
+        первую доску и попробуйте формулировать задачи вместе с ИИ‑подсказками.
+      </p>
     </section>
   );
 }

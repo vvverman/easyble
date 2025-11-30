@@ -1,7 +1,8 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
-import { BookTextIcon, SquareKanbanIcon } from 'lucide-react';
+import { BookTextIcon } from 'lucide-react';
 import type { CSSProperties } from 'react';
 
 import { Badge } from '~/components/ui/badge';
@@ -32,34 +33,39 @@ export function Hero() {
 
       <div className="mx-auto max-w-2xl px-4">
         <Badge className="mb-8" variant="secondary">
-          <span className="underline">Free</span> & Open Source
+          он заботится
         </Badge>
 
-        <h1 className="flex flex-col items-center justify-center font-mono text-4xl font-semibold sm:text-7xl">
+        <h1 className="flex flex-col items-center justify-center font-mono text-4xl font-semibold sm:text-6xl">
           <span className="flex items-center text-center">
-            <SquareKanbanIcon className="mr-2 size-14 sm:size-26" /> Shadcn
+            <Image
+              src="/favicon.ico"
+              alt="Easyble"
+              width={56}
+              height={56}
+              className="mr-2 rounded-xl sm:size-16"
+            />
+            Easyble —
           </span>
-          Kanban Board
+            1-ый эмпатичный задачник
         </h1>
 
         <p className="text-muted-foreground mt-8 text-lg sm:text-xl/8">
           <span className="relative">
-            Kickstart your B2B & B2C SaaS apps with this{' '}
-            <span className="text-primary decoration-primary underline decoration-wavy underline-offset-4">
-              open-source
-            </span>{' '}
-            Shadcn Kanban Board built with React and Tailwind CSS.
+            Easyble помогает формулировать задачи бережно и понятно: ИИ подсказывает
+            мягкие формулировки и структурирует мысли, чтобы в команде было больше
+            доверия и ясности.
           </span>
         </p>
 
         <div className="mt-10 flex items-center justify-center gap-2">
           <Button asChild>
-            <Link href="/example">Try it out</Link>
+            <Link href="/example">Создать команду</Link>
           </Button>
 
           <Button asChild className="text-foreground" variant="link">
-            <a href="https://github.com/janhesters/shadcn-kanban-board/blob/main/README.md">
-              Documentation
+            <a href="...">
+              Связаться
               <BookTextIcon />
             </a>
           </Button>
@@ -68,14 +74,14 @@ export function Hero() {
 
       <div className="mt-16 px-4">
         <img
-          alt="App screenshot (light)"
+          alt="Скриншот Easyble (светлая тема)"
           className={cn(imageClassNames, 'shadow-sm dark:hidden')}
           src="/images/app-light.png"
           style={imageFadeStyle}
         />
 
         <img
-          alt="App screenshot (dark)"
+          alt="Скриншот Easyble (тёмная тема)"
           className={cn(imageClassNames, 'hidden dark:block')}
           src="/images/app-dark.png"
           style={imageFadeStyle}
