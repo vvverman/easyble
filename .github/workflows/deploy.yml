@@ -59,24 +59,31 @@ jobs:
           chmod 700 ~/.ssh
           KEYFILE=~/.ssh/id_ed25519
           printf '%s' "$SSH_KEY" | tr -d '\r' | sed 's/\\n/\n/g' > "$KEYFILE"
-          # If not a valid key, try base64-decoding the secret
-          if ! ssh-keygen -lf "$KEYFILE" >/dev/null 2>&1; then
-            printf '%s' "$SSH_KEY" | tr -d '\r' | base64 -d > "$KEYFILE" 2>/dev/null || {
-              echo "Provided SSH key is not valid (even after base64 decode)"; exit 1;
-            }
-          fi
           chmod 600 "$KEYFILE"
-          ssh-keygen -lf "$KEYFILE"
           eval "$(ssh-agent -s)"
-          if [ -n "$SSH_PASSPHRASE" ]; then
-            ASKPASS=$(mktemp)
-            printf '%s\n' '#!/bin/sh' "echo \"$SSH_PASSPHRASE\"" > "$ASKPASS"
-            chmod +x "$ASKPASS"
-            DISPLAY=:0 SSH_ASKPASS="$ASKPASS" setsid -w ssh-add ~/.ssh/id_ed25519
-            rm -f "$ASKPASS"
-          else
-            ssh-add ~/.ssh/id_ed25519
+
+          add_key() {
+            if [ -n "$SSH_PASSPHRASE" ]; then
+              ASKPASS=$(mktemp)
+              printf '%s\n' '#!/bin/sh' "echo \"$SSH_PASSPHRASE\"" > "$ASKPASS"
+              chmod +x "$ASKPASS"
+              DISPLAY=:0 SSH_ASKPASS="$ASKPASS" setsid -w ssh-add "$KEYFILE"
+              rc=$?
+              rm -f "$ASKPASS"
+              return $rc
+            else
+              ssh-add "$KEYFILE"
+            fi
+          }
+
+          if ! add_key; then
+            printf '%s' "$SSH_KEY" | tr -d '\r' | base64 -d > "$KEYFILE" 2>/dev/null || {
+              echo "Failed to load SSH key (plain and base64 attempts)"; exit 1;
+            }
+            chmod 600 "$KEYFILE"
+            add_key || { echo "Failed to add SSH key even after base64 decode"; exit 1; }
           fi
+
           ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
 
       - name: Rsync to VPS
