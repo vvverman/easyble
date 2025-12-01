@@ -79,7 +79,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
     owner && (owner.name || owner.email)
       ? (owner.name || owner.email)!
           .split(" ")
-          .map((part) => part[0])
+          .map((part: string) => part[0])
           .join("")
           .slice(0, 2)
           .toUpperCase()
