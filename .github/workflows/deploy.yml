@@ -15,6 +15,7 @@ jobs:
       SSH_USER: ${{ vars.VPS_USER }}
       SSH_PORT: ${{ vars.VPS_PORT || '22' }}
       SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      SSH_PASSPHRASE: ${{ secrets.VPS_SSH_PASSPHRASE || '' }}
       APP_DIR: ${{ vars.VPS_APP_DIR }}
     steps:
       - name: Check required deploy env
@@ -51,6 +52,10 @@ jobs:
         if: ${{ steps.deploy_check.outputs.skip != 'true' }}
         run: npm run build
 
+      - name: Install sshpass if passphrase is provided
+        if: ${{ steps.deploy_check.outputs.skip != 'true' && env.SSH_PASSPHRASE != '' }}
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
       - name: Prepare SSH key and known_hosts
         if: ${{ steps.deploy_check.outputs.skip != 'true' }}
         run: |
@@ -63,7 +68,11 @@ jobs:
       - name: Rsync to VPS
         if: ${{ steps.deploy_check.outputs.skip != 'true' }}
         run: |
-          RSYNC_RSH="ssh -p $SSH_PORT -i ~/.ssh/id_ed25519" \
+          if [ -n "$SSH_PASSPHRASE" ]; then
+            RSYNC_RSH="sshpass -p \"$SSH_PASSPHRASE\" ssh -p $SSH_PORT -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new"
+          else
+            RSYNC_RSH="ssh -p $SSH_PORT -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new"
+          fi
           rsync -az --delete \
             --exclude ".git" \
             --exclude "node_modules" \
@@ -73,7 +82,11 @@ jobs:
       - name: Install & restart on VPS
         if: ${{ steps.deploy_check.outputs.skip != 'true' }}
         run: |
-          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" <<'EOF'
+          SSH_CMD="ssh -p \"$SSH_PORT\" -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new"
+          if [ -n "$SSH_PASSPHRASE" ]; then
+            SSH_CMD="sshpass -p \"$SSH_PASSPHRASE\" $SSH_CMD"
+          fi
+          $SSH_CMD "$SSH_USER@$SSH_HOST" <<'EOF'
           set -euo pipefail
           cd "$APP_DIR"
           npm ci --omit=dev
