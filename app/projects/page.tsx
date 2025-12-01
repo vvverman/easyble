@@ -77,7 +77,7 @@ export default async function ProjectsIndexPage(props: {
   const defaultTeamId = teams[0]?.id
   const currentTeamId = teamFromUrl ?? defaultTeamId ?? null
   const currentTeam = currentTeamId
-    ? teams.find((t) => t.id === currentTeamId) ?? null
+    ? teams.find((t: { id: string }) => t.id === currentTeamId) ?? null
     : null
 
   const projectsForTeam =
