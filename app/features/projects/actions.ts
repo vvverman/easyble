@@ -98,7 +98,7 @@ export async function deleteProject(formData: FormData) {
     where: { projectId: id },
     select: { id: true },
   });
-  const boardIds = boards.map((b) => b.id);
+  const boardIds = boards.map((b: { id: string }) => b.id);
 
   if (boardIds.length > 0) {
     // Удаляем все задачи по колонкам этих бордов
