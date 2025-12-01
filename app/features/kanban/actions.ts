@@ -15,6 +15,14 @@ function splitTaskContent(raw: string): { title: string; description: string | n
   return { title, description };
 }
 
+function revalidateBoardViews(projectId: string, boardId?: string) {
+  if (boardId) {
+    revalidatePath(`/projects/${projectId}/boards/${boardId}`);
+  }
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/projects');
+}
+
 // --- Columns ---
 
 export async function addColumn(boardId: string, projectId: string, title: string) {
@@ -27,21 +35,41 @@ export async function addColumn(boardId: string, projectId: string, title: strin
       order: count,
     },
   });
-  revalidatePath(`/projects/${projectId}/boards/${boardId}`);
+  revalidateBoardViews(projectId, boardId);
 }
 
 export async function updateColumnTitle(columnId: string, title: string) {
+  const column = await prisma.column.findUnique({
+    where: { id: columnId },
+    select: {
+      boardId: true,
+      board: { select: { projectId: true } },
+    },
+  });
+
+  if (!column) return;
+
   await prisma.column.update({
     where: { id: columnId },
     data: { title },
   });
-  revalidatePath('/projects/[projectId]');
+  revalidateBoardViews(column.board.projectId, column.boardId);
 }
 
 export async function deleteColumn(columnId: string) {
+  const column = await prisma.column.findUnique({
+    where: { id: columnId },
+    select: {
+      boardId: true,
+      board: { select: { projectId: true } },
+    },
+  });
+
+  if (!column) return;
+
   await prisma.task.deleteMany({ where: { columnId } });
   await prisma.column.delete({ where: { id: columnId } });
-  revalidatePath('/projects/[projectId]');
+  revalidateBoardViews(column.board.projectId, column.boardId);
 }
 
 // --- Tasks ---
@@ -65,6 +93,7 @@ export async function addTask(columnId: string, content: string) {
   }
 
   const projectId = columnWithBoard.board.projectId;
+  const boardId = columnWithBoard.boardId;
 
   const { _max } = await prisma.task.aggregate({
     where: {
@@ -102,7 +131,7 @@ export async function addTask(columnId: string, content: string) {
     });
   });
 
-  revalidatePath('/projects/[projectId]');
+  revalidateBoardViews(projectId, boardId);
 }
 
 // Обновляем ТОЛЬКО заголовок задачи, не трогая description
@@ -112,12 +141,26 @@ export async function updateTaskTitle(taskId: string, title: string) {
     return;
   }
 
+  const taskWithBoard = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: {
+      column: {
+        select: {
+          boardId: true,
+          board: { select: { projectId: true } },
+        },
+      },
+    },
+  });
+
+  if (!taskWithBoard) return;
+
   await prisma.task.update({
     where: { id: taskId },
     data: { title: trimmed },
   });
 
-  revalidatePath('/projects/[projectId]');
+  revalidateBoardViews(taskWithBoard.column.board.projectId, taskWithBoard.column.boardId);
 }
 
 export async function updateTaskDetails(
@@ -134,6 +177,20 @@ export async function updateTaskDetails(
   if (!title) {
     return;
   }
+
+  const taskWithBoard = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: {
+      column: {
+        select: {
+          boardId: true,
+          board: { select: { projectId: true } },
+        },
+      },
+    },
+  });
+
+  if (!taskWithBoard) return;
 
   const parseDateTime = (value?: string | null) => {
     if (!value || !value.trim()) return null;
@@ -152,12 +209,26 @@ export async function updateTaskDetails(
     },
   });
 
-  revalidatePath('/projects/[projectId]');
+  revalidateBoardViews(taskWithBoard.column.board.projectId, taskWithBoard.column.boardId);
 }
 
 export async function deleteTask(taskId: string) {
+  const taskWithBoard = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: {
+      column: {
+        select: {
+          boardId: true,
+          board: { select: { projectId: true } },
+        },
+      },
+    },
+  });
+
+  if (!taskWithBoard) return;
+
   await prisma.task.delete({ where: { id: taskId } });
-  revalidatePath('/projects/[projectId]');
+  revalidateBoardViews(taskWithBoard.column.board.projectId, taskWithBoard.column.boardId);
 }
 
 // Завершение задачи: статус DONE + перенос в Done-колонку или архив
@@ -178,9 +249,10 @@ export async function completeTask(taskId: string) {
   if (!task) return;
 
   const projectId = task.column.board.projectId;
+  const boardId = task.column.boardId;
   const boardColumns = task.column.board.columns;
 
-  const doneColumn = boardColumns.find((c) => {
+  const doneColumn = boardColumns.find((c: { title: string }) => {
     const t = c.title.toLowerCase();
     return (
       t === 'done' ||
@@ -200,7 +272,7 @@ export async function completeTask(taskId: string) {
         endAt: new Date(),
       },
     });
-    revalidatePath(`/projects/${projectId}`);
+    revalidateBoardViews(projectId, boardId);
     return;
   }
 
@@ -237,20 +309,45 @@ export async function completeTask(taskId: string) {
     });
   });
 
-  revalidatePath(`/projects/${projectId}`);
+  revalidateBoardViews(projectId, boardId);
 }
 
 export async function moveTask(
-  taskId: string, 
-  newColumnId: string, 
-  newOrder: number, 
+  taskId: string,
+  newColumnId: string,
+  newOrder: number,
   projectId: string
 ) {
-  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: {
+      order: true,
+      columnId: true,
+      column: {
+        select: {
+          boardId: true,
+          board: { select: { projectId: true } },
+        },
+      },
+    },
+  });
   if (!task) return;
+
+  const newColumn = await prisma.column.findUnique({
+    where: { id: newColumnId },
+    select: {
+      boardId: true,
+      board: { select: { projectId: true } },
+    },
+  });
+  if (!newColumn) return;
 
   const oldColumnId = task.columnId;
   const oldOrder = task.order;
+  const sourceBoardId = task.column.boardId;
+  const sourceProjectId = task.column.board.projectId;
+  const targetBoardId = newColumn.boardId;
+  const targetProjectId = newColumn.board.projectId;
 
   if (oldColumnId === newColumnId && oldOrder === newOrder) return;
 
@@ -285,5 +382,8 @@ export async function moveTask(
     });
   });
 
-  revalidatePath(`/projects/${projectId}`);
+  revalidateBoardViews(targetProjectId, targetBoardId);
+  if (targetBoardId !== sourceBoardId || targetProjectId !== sourceProjectId) {
+    revalidateBoardViews(sourceProjectId, sourceBoardId);
+  }
 }

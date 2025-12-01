@@ -1,29 +1,42 @@
-'use server';
+"use server";
 
-import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
-import prisma from '~/lib/prisma';
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
+import prisma from "~/lib/prisma";
 
 export async function createProject(formData: FormData) {
-  const title = (formData.get('title') as string).trim();
-  const icon = ((formData.get('icon') as string | null) || 'FolderKanban').trim();
-  const teamId = (formData.get('teamId') as string | null)?.trim() || null;
+  const title = (formData.get("title") as string).trim();
+  const icon = ((formData.get("icon") as string | null) || "FolderKanban").trim();
+  const teamId = (formData.get("teamId") as string | null)?.trim() || null;
 
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    try {
-      user = await prisma.user.create({
-        data: {
-          email: 'test@example.com',
-          name: 'Test User',
-        },
-      });
-    } catch {
-      user = await prisma.user.findFirst();
-    }
+  const headersList = await headers();
+  const session = await auth.api.getSession({
+    headers: headersList,
+  });
+
+  const userId = session?.user?.id;
+  if (!userId) {
+    redirect("/");
   }
 
-  if (!user) throw new Error('No user found and failed to create one');
+  const email = session?.user?.email ?? `user-${userId}@example.com`;
+  const name = session?.user?.name ?? "User";
+
+  const user = await prisma.user.upsert({
+    where: { id: userId },
+    update: {
+      email,
+      name,
+    },
+    create: {
+      id: userId,
+      email,
+      name,
+    },
+    select: { id: true },
+  });
 
   const project = await prisma.project.create({
     data: {
