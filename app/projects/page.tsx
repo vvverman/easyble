@@ -16,6 +16,9 @@ type SearchParams = {
   [key: string]: string | string[] | undefined
 }
 
+// Avoid static prerender so DB access happens at request time
+export const dynamic = "force-dynamic"
+
 export default async function ProjectsIndexPage(props: {
   searchParams: Promise<SearchParams>
 }) {

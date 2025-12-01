@@ -8,6 +8,9 @@ interface NewBoardPageProps {
   }>
 }
 
+// Avoid static prerender so DB access happens at request time
+export const dynamic = "force-dynamic"
+
 export default async function NewBoardPage({ params }: NewBoardPageProps) {
   const { projectId } = await params
 

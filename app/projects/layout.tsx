@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 
+// Disable static prerender so database access only happens at request time
+export const dynamic = "force-dynamic"
+
 export default async function ProjectsLayout({
   children,
 }: {

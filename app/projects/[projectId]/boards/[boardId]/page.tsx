@@ -19,6 +19,9 @@ interface BoardPageRouteParams {
   }>
 }
 
+// Avoid static prerender so DB access happens at request time
+export const dynamic = "force-dynamic"
+
 export async function generateMetadata(
   { params }: BoardPageRouteParams
 ): Promise<Metadata> {

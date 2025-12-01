@@ -12,6 +12,9 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 
+// Avoid static prerender so DB access happens at request time
+export const dynamic = "force-dynamic"
+
 export default async function AccountPage() {
   const headersList = await headers()
   const session = await auth.api.getSession({

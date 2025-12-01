@@ -7,6 +7,9 @@ interface ProjectPageProps {
   }>
 }
 
+// Avoid static prerender so DB access happens at request time
+export const dynamic = "force-dynamic"
+
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectId } = await params
 

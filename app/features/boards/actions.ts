@@ -70,7 +70,7 @@ export async function deleteBoard(formData: FormData) {
     where: { boardId },
     select: { id: true },
   });
-  const columnIds = columns.map((c) => c.id);
+  const columnIds = columns.map((c: { id: string }) => c.id);
 
   if (columnIds.length > 0) {
     await prisma.task.deleteMany({
