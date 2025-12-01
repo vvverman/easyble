@@ -1,0 +1,58 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ secrets.VPS_HOST }}
+      SSH_USER: ${{ secrets.VPS_USER }}
+      SSH_PORT: ${{ secrets.VPS_PORT || '22' }}
+      SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      APP_DIR: ${{ secrets.VPS_APP_DIR }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.21.1"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Prepare SSH key and known_hosts
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Rsync to VPS
+        run: |
+          RSYNC_RSH="ssh -p $SSH_PORT -i ~/.ssh/id_ed25519" \
+          rsync -az --delete \
+            --exclude ".git" \
+            --exclude "node_modules" \
+            --exclude ".next/cache" \
+            ./ "$SSH_USER@$SSH_HOST:$APP_DIR/"
+
+      - name: Install & restart on VPS
+        run: |
+          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" <<'EOF'
+          set -euo pipefail
+          cd "$APP_DIR"
+          npm ci --omit=dev
+          npm run build
+          pm2 describe easyble >/dev/null 2>&1 && pm2 restart easyble --update-env || pm2 start npm --name easyble -- start
+          pm2 save
+          EOF
