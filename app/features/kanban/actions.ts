@@ -277,7 +277,7 @@ export async function completeTask(taskId: string) {
   }
 
   // Если колонка Done есть — двигаем задачу в неё наверх
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const current = await tx.task.findUnique({ where: { id: taskId } });
     if (!current) return;
 
