@@ -82,7 +82,7 @@ export default async function ProjectsIndexPage(props: {
 
   const projectsForTeam =
     currentTeamId != null
-      ? allProjects.filter((p) => p.teamId === currentTeamId)
+      ? allProjects.filter((p: { teamId: string | null }) => p.teamId === currentTeamId)
       : allProjects
 
   const teamQuery = currentTeamId ? `?team=${currentTeamId}` : ""
