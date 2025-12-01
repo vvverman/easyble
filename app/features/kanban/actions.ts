@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -83,7 +84,7 @@ export async function addTask(columnId: string, content: string) {
   // Новая задача вверху колонки:
   // 1) увеличиваем order у всех существующих задач
   // 2) создаём новую с order = 0
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.task.updateMany({
       where: { columnId },
       data: { order: { increment: 1 } },
