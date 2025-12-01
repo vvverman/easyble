@@ -5,38 +5,48 @@ on:
     branches:
       - main
 
-env:
-  SSH_HOST: ${{ secrets.VPS_HOST || '' }}
-  SSH_USER: ${{ secrets.VPS_USER || '' }}
-  SSH_PORT: ${{ secrets.VPS_PORT || '22' }}
-  SSH_KEY: ${{ secrets.VPS_SSH_KEY || '' }}
-  APP_DIR: ${{ secrets.VPS_APP_DIR || '' }}
-
 jobs:
   deploy:
-    if: ${{ env.SSH_HOST != '' && env.SSH_USER != '' && env.SSH_KEY != '' && env.APP_DIR != '' }}
     runs-on: ubuntu-latest
     env:
-      SSH_HOST: ${{ env.SSH_HOST }}
-      SSH_USER: ${{ env.SSH_USER }}
-      SSH_PORT: ${{ env.SSH_PORT }}
-      SSH_KEY: ${{ env.SSH_KEY }}
-      APP_DIR: ${{ env.APP_DIR }}
+      SSH_HOST: ${{ secrets.VPS_HOST }}
+      SSH_USER: ${{ secrets.VPS_USER }}
+      SSH_PORT: ${{ secrets.VPS_PORT || '22' }}
+      SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      APP_DIR: ${{ secrets.VPS_APP_DIR }}
     steps:
+      - name: Skip if secrets are missing
+        run: |
+          missing=0
+          for var in SSH_HOST SSH_USER SSH_KEY APP_DIR; do
+            if [ -z "${!var}" ]; then
+              echo "Missing $var"
+              missing=1
+            fi
+          done
+          if [ $missing -eq 1 ]; then
+            echo "SKIP_DEPLOY=true" >> "$GITHUB_ENV"
+            echo "Deploy skipped due to missing secrets."
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
+        if: ${{ env.SKIP_DEPLOY != 'true' }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "22.21.1"
           cache: npm
+        if: ${{ env.SKIP_DEPLOY != 'true' }}
 
       - name: Install dependencies
         run: npm ci
+        if: ${{ env.SKIP_DEPLOY != 'true' }}
 
       - name: Build
         run: npm run build
+        if: ${{ env.SKIP_DEPLOY != 'true' }}
 
       - name: Prepare SSH key and known_hosts
         run: |
@@ -45,6 +55,7 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+        if: ${{ env.SKIP_DEPLOY != 'true' }}
 
       - name: Rsync to VPS
         run: |
@@ -54,6 +65,7 @@ jobs:
             --exclude "node_modules" \
             --exclude ".next/cache" \
             ./ "$SSH_USER@$SSH_HOST:$APP_DIR/"
+        if: ${{ env.SKIP_DEPLOY != 'true' }}
 
       - name: Install & restart on VPS
         run: |
@@ -65,3 +77,4 @@ jobs:
           pm2 describe easyble >/dev/null 2>&1 && pm2 restart easyble --update-env || pm2 start npm --name easyble -- start
           pm2 save
           EOF
+        if: ${{ env.SKIP_DEPLOY != 'true' }}
