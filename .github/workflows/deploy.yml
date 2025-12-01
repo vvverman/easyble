@@ -62,10 +62,7 @@ jobs:
           eval "$(ssh-agent -s)"
           if [ -n "$SSH_PASSPHRASE" ]; then
             ASKPASS=$(mktemp)
-            cat > "$ASKPASS" <<'EOF'
-#!/bin/sh
-echo "$SSH_PASSPHRASE"
-EOF
+            printf '%s\n' '#!/bin/sh' "echo \"$SSH_PASSPHRASE\"" > "$ASKPASS"
             chmod +x "$ASKPASS"
             DISPLAY=:0 SSH_ASKPASS="$ASKPASS" setsid -w ssh-add ~/.ssh/id_ed25519
             rm -f "$ASKPASS"
