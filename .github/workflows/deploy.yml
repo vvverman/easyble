@@ -5,15 +5,11 @@ on:
     branches:
       - main
 
-env:
-  # Name of the GitHub Environment that stores VPS secrets/variables
-  DEPLOY_ENVIRONMENT: ${{ vars.DEPLOY_ENVIRONMENT || 'VPS_HOST' }}
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: ${{ env.DEPLOY_ENVIRONMENT }}
+      name: production
     env:
       SSH_HOST: ${{ vars.VPS_HOST }}
       SSH_USER: ${{ vars.VPS_USER }}
