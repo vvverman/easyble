@@ -351,7 +351,7 @@ export async function moveTask(
 
   if (oldColumnId === newColumnId && oldOrder === newOrder) return;
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     if (oldColumnId === newColumnId) {
       if (newOrder > oldOrder) {
         await tx.task.updateMany({
