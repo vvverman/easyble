@@ -7,7 +7,7 @@ on:
 
 env:
   # Name of the GitHub Environment that stores VPS secrets/variables
-  DEPLOY_ENVIRONMENT: ${{ vars.DEPLOY_ENVIRONMENT || 'production' }}
+  DEPLOY_ENVIRONMENT: ${{ vars.DEPLOY_ENVIRONMENT || 'VPS_HOST' }}
 
 jobs:
   deploy:
