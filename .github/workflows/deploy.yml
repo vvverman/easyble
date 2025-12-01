@@ -57,9 +57,16 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s' "$SSH_KEY" | tr -d '\r' | sed 's/\\n/\n/g' > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keygen -lf ~/.ssh/id_ed25519
+          KEYFILE=~/.ssh/id_ed25519
+          printf '%s' "$SSH_KEY" | tr -d '\r' | sed 's/\\n/\n/g' > "$KEYFILE"
+          # If not a valid key, try base64-decoding the secret
+          if ! ssh-keygen -lf "$KEYFILE" >/dev/null 2>&1; then
+            printf '%s' "$SSH_KEY" | tr -d '\r' | base64 -d > "$KEYFILE" 2>/dev/null || {
+              echo "Provided SSH key is not valid (even after base64 decode)"; exit 1;
+            }
+          fi
+          chmod 600 "$KEYFILE"
+          ssh-keygen -lf "$KEYFILE"
           eval "$(ssh-agent -s)"
           if [ -n "$SSH_PASSPHRASE" ]; then
             ASKPASS=$(mktemp)
