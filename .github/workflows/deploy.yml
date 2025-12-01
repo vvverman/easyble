@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: production
+      name: VPS_HOST
     env:
       SSH_HOST: ${{ vars.VPS_HOST }}
       SSH_USER: ${{ vars.VPS_USER }}
