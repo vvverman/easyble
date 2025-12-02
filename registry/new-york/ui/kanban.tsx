@@ -412,7 +412,7 @@ export function KanbanBoard({
   return (
     <div
       className={cn(
-        "inline-flex h-full items-start gap-x-2 py-1",
+        "inline-flex h-full items-start gap-x-2",
         className,
       )}
       ref={ref}
