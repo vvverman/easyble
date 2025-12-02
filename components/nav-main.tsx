@@ -3,7 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { ChevronRight, MoreHorizontal, Plus, type LucideIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useWorkspaceTabs } from "@/lib/workspace-tabs-store"
 
 import {
   Collapsible,
@@ -80,6 +81,8 @@ export function NavMain({
   currentTeamId?: string
 }) {
   const router = useRouter()
+  const pathname = usePathname()
+  const openTabs = useWorkspaceTabs()
   const [openMap, setOpenMap] = React.useState<Record<string, boolean>>({})
 
   const [projectDialog, setProjectDialog] = React.useState<{
@@ -198,6 +201,10 @@ export function NavMain({
                         const isCreateBoard = subItem.url.includes("/boards/new")
                         const { projectId: pId, boardId } =
                           getBoardIdsFromUrl(subItem.url)
+                        const normalizedSub = stripQuery(subItem.url)
+                        const isActiveBoard =
+                          stripQuery(pathname) === normalizedSub ||
+                          openTabs.some((tab) => stripQuery(tab.href) === normalizedSub)
 
                         return (
                           <SidebarMenuSubItem key={subItem.url}>
@@ -221,7 +228,10 @@ export function NavMain({
                                     href={subItem.url}
                                     className="flex min-w-0 flex-1 items-center text-xs text-foreground"
                                   >
-                                    <span className="truncate">
+                                    <span className="truncate flex items-center gap-1">
+                                      {isActiveBoard && (
+                                        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                                      )}
                                       {subItem.title}
                                     </span>
                                   </Link>

@@ -87,13 +87,6 @@ export default async function ProjectsIndexPage(props: {
 
   const teamQuery = currentTeamId ? `?team=${currentTeamId}` : ""
 
-  // Если в команде всего один борд — сразу редиректим на него
-  const boardsForTeam = projectsForTeam.flatMap((project: any) => project.boards ?? [])
-  if (boardsForTeam.length === 1) {
-    const onlyBoard = boardsForTeam[0] as any
-    redirect(`/projects/${onlyBoard.projectId}/boards/${onlyBoard.id}${teamQuery}`)
-  }
-
   // Кол-во пользователей в текущей команде
   let teamMemberCount = 0
   if (currentTeamId) {

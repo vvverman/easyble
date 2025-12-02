@@ -1,58 +1,68 @@
-"use client"
+"use server"
 
+import { headers } from "next/headers"
+import { redirect, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
-import { authClient } from "@/lib/auth-client"
+import { auth } from "@/auth"
+import prisma from "~/lib/prisma"
+import { completeProfile } from "~/features/account/complete-profile"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
-import { completeProfile } from "~/features/account/complete-profile"
 
-function getUsernameFromEmail(email?: string | null) {
-  if (!email) return ""
-  const [local] = email.split("@")
-  return local ?? ""
+type ProfileProps = {
+  email: string
+  displayName: string
+  username: string
+  avatar: string
 }
 
-export default function CompleteProfilePage() {
-  const { data: session } = authClient.useSession()
-  const router = useRouter()
+export default async function CompleteProfilePage() {
+  const session = await auth.api.getSession({ headers: await headers() })
+  const email = session?.user?.email ?? ""
+  const name = session?.user?.name ?? ""
+  const image = session?.user?.image ?? ""
 
-  const [displayName, setDisplayName] = useState("")
-  const [username, setUsername] = useState("")
-  const [avatar, setAvatar] = useState("")
+  if (!email) {
+    redirect("/login")
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { name: true, username: true, image: true },
+  })
+
+  if (user?.name && user?.username) {
+    redirect("/projects")
+  }
+
+  const initial: ProfileProps = {
+    email,
+    displayName: user?.name ?? name ?? "",
+    username: user?.username ?? (email.split("@")[0] || ""),
+    avatar: user?.image ?? image ?? "",
+  }
+
+  return <CompleteProfileClient initial={initial} />
+}
+
+function CompleteProfileClient({ initial }: { initial: ProfileProps }) {
+  "use client"
+
+  const router = useRouter()
+  const [displayName, setDisplayName] = useState(initial.displayName)
+  const [username, setUsername] = useState(initial.username)
+  const [avatar, setAvatar] = useState(initial.avatar)
   const [pending, setPending] = useState(false)
 
-  const email = session?.user?.email ?? ""
+  const email = initial.email
 
   useEffect(() => {
-    const load = async () => {
-      // Try to fetch current user; if already completed, redirect
-      try {
-        const res = await fetch("/api/profile/self")
-        if (res.ok) {
-          const { user } = await res.json()
-          if (user?.name && user?.username) {
-            router.push("/projects")
-            return
-          }
-          setDisplayName(user?.name ?? session?.user?.name ?? "")
-          setUsername(user?.username ?? getUsernameFromEmail(user?.email ?? session?.user?.email ?? ""))
-          setAvatar(user?.image ?? session?.user?.image ?? "")
-          return
-        }
-      } catch (err) {
-        console.error(err)
-      }
-      if (session?.user) {
-        setDisplayName(session.user.name ?? "")
-        setUsername(getUsernameFromEmail(session.user.email))
-        setAvatar(session.user.image ?? "")
-      }
-    }
-    load()
-  }, [session])
+    setDisplayName(initial.displayName)
+    setUsername(initial.username)
+    setAvatar(initial.avatar)
+  }, [initial.displayName, initial.username, initial.avatar])
 
   const canSubmit = useMemo(() => {
     return (displayName?.trim() || username?.trim()) && email
@@ -65,8 +75,9 @@ export default function CompleteProfilePage() {
     try {
       await completeProfile({
         displayName: displayName.trim() || username.trim(),
-        username: username.trim() || getUsernameFromEmail(email),
+        username: username.trim() || email.split("@")[0] || "",
         avatar: avatar.trim() || null,
+        email,
       })
       router.push("/projects")
     } catch (error) {
@@ -128,4 +139,9 @@ export default function CompleteProfilePage() {
       </Card>
     </div>
   )
+}
+
+function useRouterSafe() {
+  const { push } = authClient.useRouter?.() || { push: (path: string) => window.location.assign(path) }
+  return { push }
 }

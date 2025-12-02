@@ -2,7 +2,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import prisma from "~/lib/prisma"
-import { updateDisplayName } from "~/features/account/actions"
+import { updateProfile } from "~/features/account/actions"
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -28,7 +28,7 @@ export default async function AccountPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { name: true, email: true },
+    select: { name: true, email: true, username: true, image: true },
   })
 
   if (!user) {
@@ -63,7 +63,7 @@ export default async function AccountPage() {
         <p className="font-medium">{user.email}</p>
       </div>
 
-      <form action={updateDisplayName} className="space-y-4">
+      <form action={updateProfile} className="space-y-4">
         <div className="space-y-2">
           <label
             htmlFor="name"
@@ -77,6 +77,40 @@ export default async function AccountPage() {
             type="text"
             defaultValue={user.name ?? ""}
             required
+            className="w-full rounded-md border px-3 py-2 text-sm bg-background"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="username"
+            className="text-sm font-medium text-foreground"
+          >
+            Username
+          </label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            defaultValue={user.username ?? ""}
+            required
+            className="w-full rounded-md border px-3 py-2 text-sm bg-background"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="avatar"
+            className="text-sm font-medium text-foreground"
+          >
+            Avatar URL
+          </label>
+          <input
+            id="avatar"
+            name="avatar"
+            type="url"
+            defaultValue={user.image ?? ""}
+            placeholder="https://..."
             className="w-full rounded-md border px-3 py-2 text-sm bg-background"
           />
         </div>
