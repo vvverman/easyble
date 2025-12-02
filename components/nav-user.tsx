@@ -49,7 +49,7 @@ export function NavUser() {
           <SidebarMenuButton
             size="lg"
             className="justify-between"
-            onClick={() => router.push("/sign-in")}
+            onClick={() => router.push("/login")}
           >
             <span className="truncate font-semibold">Sign in</span>
           </SidebarMenuButton>
@@ -73,7 +73,7 @@ export function NavUser() {
 
   const handleSignOut = async () => {
     await authClient.signOut()
-    router.push("/sign-in")
+    router.push("/")
   }
 
   return (
