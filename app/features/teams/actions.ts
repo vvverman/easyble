@@ -1,31 +1,42 @@
-'use server';
+"use server";
 
-import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
-import prisma from '~/lib/prisma';
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { auth } from "@/auth";
+import prisma from "~/lib/prisma";
 
 export async function createTeam(formData: FormData) {
-  const name = (formData.get('name') as string | null)?.trim();
+  const name = (formData.get("name") as string | null)?.trim();
 
   if (!name) {
-    throw new Error('Team name is required');
+    throw new Error("Team name is required");
   }
 
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    try {
-      user = await prisma.user.create({
-        data: {
-          email: 'test@example.com',
-          name: 'Test User',
-        },
-      });
-    } catch {
-      user = await prisma.user.findFirst();
-    }
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  const userId = session?.user?.id;
+  if (!userId) {
+    redirect("/login");
   }
 
-  if (!user) throw new Error('No user found and failed to create one');
+  const user = await prisma.user.upsert({
+    where: { id: userId! },
+    update: {
+      email: session?.user?.email ?? undefined,
+      name: session?.user?.name ?? undefined,
+      image: session?.user?.image ?? undefined,
+    },
+    create: {
+      id: userId!,
+      email: session?.user?.email ?? `user-${userId}@example.com`,
+      name: session?.user?.name ?? "User",
+      image: session?.user?.image ?? null,
+    },
+    select: { id: true },
+  });
 
   const team = await prisma.team.create({
     data: {

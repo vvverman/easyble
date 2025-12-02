@@ -2,6 +2,8 @@ import type { ReactNode } from "react"
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import prisma from "~/lib/prisma"
+import { headers } from "next/headers"
+import { auth } from "@/auth"
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { WorkspaceTabs } from "@/components/workspace-tabs"
@@ -20,30 +22,32 @@ export default async function ProjectsLayout({
 }: {
   children: ReactNode
 }) {
-  const teamCount = await prisma.team.count()
-  if (teamCount === 0) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  const userId = session?.user?.id
+  if (!userId) {
+    redirect("/login")
+  }
+
+  const teams = await prisma.team.findMany({
+    orderBy: { createdAt: "asc" },
+  })
+
+  if (teams.length === 0) {
     redirect("/onboarding/team")
   }
 
-  const user = await prisma.user.findFirst({
+  const projects = await prisma.project.findMany({
     include: {
-      teams: {
-        orderBy: { createdAt: "asc" },
-      },
-      projects: {
-        include: {
-          boards: {
-            select: { id: true, title: true },
-            orderBy: { createdAt: "asc" },
-          },
-        },
+      boards: {
+        select: { id: true, title: true },
         orderBy: { createdAt: "asc" },
       },
     },
+    orderBy: { createdAt: "asc" },
   })
-
-  const projects = user?.projects ?? []
-  const teams = user?.teams ?? []
 
   return (
     <SidebarProvider>

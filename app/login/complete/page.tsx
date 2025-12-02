@@ -1,25 +1,16 @@
-"use server"
-
 import { headers } from "next/headers"
-import { redirect, useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import prisma from "~/lib/prisma"
-import { completeProfile } from "~/features/account/complete-profile"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card } from "@/components/ui/card"
+import { CompleteProfileClient, type CompleteProfileProps } from "./client"
 
-type ProfileProps = {
-  email: string
-  displayName: string
-  username: string
-  avatar: string
-}
+export const dynamic = "force-dynamic"
 
 export default async function CompleteProfilePage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
   const email = session?.user?.email ?? ""
   const name = session?.user?.name ?? ""
   const image = session?.user?.image ?? ""
@@ -37,7 +28,7 @@ export default async function CompleteProfilePage() {
     redirect("/projects")
   }
 
-  const initial: ProfileProps = {
+  const initial: CompleteProfileProps = {
     email,
     displayName: user?.name ?? name ?? "",
     username: user?.username ?? (email.split("@")[0] || ""),
@@ -45,103 +36,4 @@ export default async function CompleteProfilePage() {
   }
 
   return <CompleteProfileClient initial={initial} />
-}
-
-function CompleteProfileClient({ initial }: { initial: ProfileProps }) {
-  "use client"
-
-  const router = useRouter()
-  const [displayName, setDisplayName] = useState(initial.displayName)
-  const [username, setUsername] = useState(initial.username)
-  const [avatar, setAvatar] = useState(initial.avatar)
-  const [pending, setPending] = useState(false)
-
-  const email = initial.email
-
-  useEffect(() => {
-    setDisplayName(initial.displayName)
-    setUsername(initial.username)
-    setAvatar(initial.avatar)
-  }, [initial.displayName, initial.username, initial.avatar])
-
-  const canSubmit = useMemo(() => {
-    return (displayName?.trim() || username?.trim()) && email
-  }, [displayName, username, email])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!canSubmit) return
-    setPending(true)
-    try {
-      await completeProfile({
-        displayName: displayName.trim() || username.trim(),
-        username: username.trim() || email.split("@")[0] || "",
-        avatar: avatar.trim() || null,
-        email,
-      })
-      router.push("/projects")
-    } catch (error) {
-      console.error("Profile update failed", error)
-      setPending(false)
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-[#0c0c0c] text-white flex items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-2xl bg-[#0f0f0f] border-white/10 p-8">
-        <div className="mb-6 space-y-2 text-center">
-          <h1 className="text-2xl font-semibold">Complete your profile</h1>
-          <p className="text-sm text-white/70">
-            Мы создали аккаунт по вашей почте. Проверьте данные ниже и при необходимости обновите.
-          </p>
-        </div>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label className="text-white" htmlFor="email">Email</Label>
-            <Input id="email" value={email} readOnly className="border-white/10 bg-white/5 text-white" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-white" htmlFor="displayName">Имя</Label>
-            <Input
-              id="displayName"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Ваше имя"
-              className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-white" htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="username"
-              className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-white" htmlFor="avatar">Avatar URL</Label>
-            <Input
-              id="avatar"
-              value={avatar}
-              onChange={(e) => setAvatar(e.target.value)}
-              placeholder="https://..."
-              className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-            />
-          </div>
-          <Button type="submit" disabled={!canSubmit || pending} className="w-full bg-white text-black hover:bg-white/90">
-            {pending ? "Сохраняем..." : "Продолжить"}
-          </Button>
-        </form>
-      </Card>
-    </div>
-  )
-}
-
-function useRouterSafe() {
-  const { push } = authClient.useRouter?.() || { push: (path: string) => window.location.assign(path) }
-  return { push }
 }

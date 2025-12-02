@@ -1,24 +1,25 @@
 "use client"
 
-import { X,
-  GalleryVerticalEnd,
+import {
   AudioWaveform,
-  Command,
-  FolderKanban,
-  SquareKanban,
-  SquareDashedKanban,
   Briefcase,
   BriefcaseBusiness,
   BriefcaseMedical,
-  Folder,
-  FolderOpen,
-  ClipboardList,
-  ClipboardCheck,
-  Target,
-  Rocket,
-  Layers,
   Cat,
+  ClipboardCheck,
+  ClipboardList,
+  Command,
+  Folder,
+  FolderKanban,
+  FolderOpen,
   Frame,
+  GalleryVerticalEnd,
+  Layers,
+  Rocket,
+  SquareDashedKanban,
+  SquareKanban,
+  Target,
+  X,
 } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -43,11 +44,6 @@ type Project = {
 type Team = {
   id: string
   name: string
-}
-
-type Tab = {
-  href: string
-  title: string
 }
 
 type WorkspaceTabsProps = {
@@ -82,7 +78,6 @@ function resolveTitle(pathname: string, projects: Project[]): string {
     return "Project settings"
   }
 
-  // Board detail
   const boardMatch = pathname.match(/^\/projects\/([^/]+)\/boards\/([^/]+)/)
   if (boardMatch) {
     const [, projectId, boardId] = boardMatch
@@ -93,7 +88,6 @@ function resolveTitle(pathname: string, projects: Project[]): string {
     return "Board"
   }
 
-  // Project detail
   const projectMatch = pathname.match(/^\/projects\/([^/]+)/)
   if (projectMatch) {
     const projectId = projectMatch[1]
@@ -112,13 +106,26 @@ function getProjectForHref(href: string, projects: Project[]): Project | undefin
   return projects.find((p) => p.id === projectId)
 }
 
+type Tab = { href: string; title: string }
+
+function dedupeTabs(list: Tab[]): Tab[] {
+  const seen = new Set<string>()
+  const result: Tab[] = []
+  for (const tab of list) {
+    if (seen.has(tab.href)) continue
+    seen.add(tab.href)
+    result.push(tab)
+  }
+  return result
+}
+
 export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [tabs, setTabs] = useState<Tab[]>([])
 
-  const pendingNavigationRef = useRef<string | null>(null)
+  const [tabs, setTabs] = useState<Tab[]>([])
+  const prevPathRef = useRef<string | null>(null)
 
   const teamFromUrl = searchParams.get("team") || undefined
   const defaultTeamId = teams[0]?.id
@@ -128,123 +135,97 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
     if (!currentTeamId) return 0
     return projects
       .filter((p) => p.teamId === currentTeamId)
-      .reduce(
-        (sum, p) => sum + (p.boards?.length ?? 0),
-        0,
-      )
+      .reduce((sum, p) => sum + (p.boards?.length ?? 0), 0)
   }, [projects, currentTeamId])
 
   const onlyBoardPath = useMemo(() => {
     if (!currentTeamId || totalBoardsInTeam !== 1) return null
-
     const projectWithBoard = projects.find(
       (p) => p.teamId === currentTeamId && (p.boards?.length ?? 0) > 0,
     )
     const board = projectWithBoard?.boards?.[0]
-
     if (!projectWithBoard || !board) return null
-
     return `/projects/${projectWithBoard.id}/boards/${board.id}`
   }, [projects, currentTeamId, totalBoardsInTeam])
 
   useEffect(() => {
-    if (!pendingNavigationRef.current) return
-    const target = pendingNavigationRef.current
-    pendingNavigationRef.current = null
-
-    if (target && target !== pathname) {
-      router.push(target)
-    }
-  }, [pathname, router])
-
-  useEffect(() => {
     if (!pathname) return
 
-    // только внутри /projects/*
+    // Tabs live only under /projects/*
     if (!pathname.startsWith("/projects")) {
       setTabs([])
       setWorkspaceTabs([])
+      prevPathRef.current = pathname
       return
     }
 
-    // overview page — не держим вкладки
+    // Overview clears tabs
     if (pathname === "/projects") {
       setTabs([])
       setWorkspaceTabs([])
+      prevPathRef.current = pathname
       return
     }
 
     const title = resolveTitle(pathname, projects)
-    const isTempNewProject = pathname === "/projects/new"
-    const isTempNewBoard = pathname.endsWith("/boards/new")
+    const previousPath = prevPathRef.current
 
-    setTabs((prev) => {
-      let next = [...prev]
+    setTabs((current) => {
+      let next = [...current]
 
-      // если вкладок нет — стартуем с текущей
-      if (next.length === 0) {
-        return [{ href: pathname, title }]
-      }
-
+      // update title if tab already exists
       const existingIdx = next.findIndex((t) => t.href === pathname)
       if (existingIdx !== -1) {
         if (next[existingIdx].title !== title) {
           next[existingIdx] = { ...next[existingIdx], title }
         }
-        return next
+        return dedupeTabs(next)
       }
 
-      // заменить временный проект на созданный
-      if (!isTempNewProject && next.some((t) => t.href === "/projects/new")) {
-        next = next.map((t) =>
-          t.href === "/projects/new" ? { href: pathname, title } : t,
-        )
-        return next
+      // replace temporary "new project" tab after creation
+      const newProjectIdx = next.findIndex((t) => t.href === "/projects/new")
+      if (newProjectIdx !== -1 && previousPath === "/projects/new") {
+        next[newProjectIdx] = { href: pathname, title }
+        return dedupeTabs(next)
       }
 
-      // заменить временный борд на созданный
-      if (!isTempNewBoard && next.some((t) => t.href.endsWith("/boards/new"))) {
-        next = next.map((t) =>
-          t.href.endsWith("/boards/new") ? { href: pathname, title } : t,
-        )
-        return next
+      // replace temporary "new board" tab after creation
+      const newBoardIdx = next.findIndex((t) => t.href.endsWith("/boards/new"))
+      if (newBoardIdx !== -1 && previousPath?.endsWith("/boards/new")) {
+        next[newBoardIdx] = { href: pathname, title }
+        return dedupeTabs(next)
       }
 
-      // иначе добавить новую
-      next = [...next, { href: pathname, title }]
-      return next
+      // otherwise add new unique tab
+      next.push({ href: pathname, title })
+      return dedupeTabs(next)
     })
+
+    prevPathRef.current = pathname
   }, [pathname, projects])
 
   useEffect(() => {
     setWorkspaceTabs(tabs as WorkspaceTab[])
   }, [tabs])
 
-  const closeTab = (href: string) => {
-    if (onlyBoardPath && href === onlyBoardPath) {
-      return
+  const handleClose = (href: string) => {
+    if (onlyBoardPath && href === onlyBoardPath) return
+
+    const fallback =
+      href === pathname
+        ? (() => {
+            const remaining = tabs.filter((t) => t.href !== href)
+            if (remaining.length > 0) return remaining[remaining.length - 1].href
+            const teamQuery = currentTeamId ? `?team=${currentTeamId}` : ""
+            return `/projects${teamQuery}`
+          })()
+        : null
+
+    setTabs((current) => dedupeTabs(current).filter((t) => t.href !== href))
+
+    if (fallback && fallback !== pathname) {
+      router.push(fallback)
     }
-
-    setTabs((prev) => {
-      const next = prev.filter((t) => t.href !== href)
-
-      if (href === pathname) {
-        const teamFromUrlInner = searchParams.get("team") || undefined
-        const defaultTeamIdInner = teams[0]?.id
-        const currentTeamIdInner = teamFromUrlInner ?? defaultTeamIdInner
-
-        const fallback =
-          next.length > 0
-            ? next[next.length - 1]?.href
-            : `/projects${currentTeamIdInner ? `?team=${currentTeamIdInner}` : ""}`
-
-        if (fallback && fallback !== pathname) {
-          router.push(fallback)
-        }
-      }
-
-      return next
-    })
   }
 
   if (!pathname || tabs.length === 0) return null
@@ -253,14 +234,16 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
   return (
     <Tabs
       value={pathname}
-      onValueChange={(value) => router.push(value)}
+      onValueChange={(value) => {
+        if (value !== pathname) {
+          router.push(value)
+        }
+      }}
       className="w-full"
     >
       <TabsList className="h-8 gap-1 bg-transparent p-0">
         {tabs.map((tab) => {
-          const isSingleBoardLocked =
-            onlyBoardPath && tab.href === onlyBoardPath
-
+          const isSingleBoardLocked = onlyBoardPath && tab.href === onlyBoardPath
           const projectForTab =
             tab.href.startsWith("/projects/") && tab.href.includes("/boards/")
               ? getProjectForHref(tab.href, projects)
@@ -283,18 +266,21 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
                 "data-[state=active]:bg-background data-[state=active]:shadow-sm",
               )}
             >
-              {Icon && (
-                <Icon className="h-3 w-3" />
-              )}
-              <span className="truncate max-w-[140px]">{tab.title}</span>
+              {Icon && <Icon className="h-3 w-3" />}
+              <span className="max-w-[140px] truncate">{tab.title}</span>
               {!isSingleBoardLocked && (
                 <span
                   role="button"
                   aria-label="Close tab"
                   tabIndex={-1}
-                  onClick={(e) => {
+                  onMouseDown={(e) => {
+                    e.preventDefault()
                     e.stopPropagation()
-                    closeTab(tab.href)
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleClose(tab.href)
                   }}
                   className="inline-flex h-4 w-4 items-center justify-center rounded hover:bg-muted"
                 >

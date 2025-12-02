@@ -67,7 +67,8 @@ export async function createProject(formData: FormData) {
 
   const firstBoard = project.boards[0];
 
-  redirect(`/projects/${project.id}/boards/${firstBoard.id}`);
+  const teamQuery = project.teamId ? `?team=${project.teamId}` : "";
+  redirect(`/projects/${project.id}/boards/${firstBoard.id}${teamQuery}`);
 }
 
 // Обновление проекта: пока даём поменять только title (иконку не трогаем)
