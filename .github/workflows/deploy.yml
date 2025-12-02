@@ -84,7 +84,8 @@ jobs:
             add_key || { echo "Failed to add SSH key even after base64 decode"; exit 1; }
           fi
 
-          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+          PORT=${SSH_PORT//\"/}
+          ssh-keyscan -p "$PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
 
       - name: Rsync to VPS
         if: ${{ steps.deploy_check.outputs.skip != 'true' }}
