@@ -2,6 +2,7 @@
 
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -19,8 +20,29 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const [email, setEmail] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setError(null)
+    const target = event.currentTarget
+    const formData = new FormData(target)
+    const emailValue = (formData.get("email") as string | null)?.trim()
+    if (!emailValue) return
+    try {
+      setIsSubmitting(true)
+      await authClient.signIn.magicLink({
+        email: emailValue,
+        callbackURL: "/login/complete",
+      })
+    } catch (err: any) {
+      console.error(err)
+      setError(err?.message ?? "Failed to send sign-in link")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleGoogle = async () => {
@@ -36,23 +58,24 @@ export function LoginForm({
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="m@example.com"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Field>
         <Field>
-          <div className="flex items-center">
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Link
-              href="/forgot"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
-              Forgot your password?
-            </Link>
-          </div>
-          <Input id="password" type="password" required />
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Sending..." : "Send magic link"}
+          </Button>
         </Field>
-        <Field>
-          <Button type="submit">Login</Button>
-        </Field>
+        {error && (
+          <p className="text-xs text-destructive">{error}</p>
+        )}
         <FieldSeparator>Or continue with</FieldSeparator>
         <Field>
           <Button variant="outline" type="button" onClick={handleGoogle}>

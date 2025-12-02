@@ -2,6 +2,8 @@ import * as React from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import prisma from "~/lib/prisma"
+import { headers } from "next/headers"
+import { auth } from "@/auth"
 
 import {
   Table,
@@ -24,6 +26,14 @@ export default async function ProjectsIndexPage(props: {
 }) {
   const searchParams = await props.searchParams
 
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  const userId = session?.user?.id
+  if (!userId) {
+    redirect("/login")
+  }
+
   const teamFromUrlRaw = searchParams?.team
   const teamFromUrl =
     typeof teamFromUrlRaw === "string"
@@ -32,12 +42,15 @@ export default async function ProjectsIndexPage(props: {
         ? teamFromUrlRaw[0]
         : undefined
 
-  const user = await prisma.user.findFirst({
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
     include: {
       teams: {
+        where: { ownerId: userId },
         orderBy: { createdAt: "asc" },
       },
       projects: {
+        where: { ownerId: userId },
         include: {
           boards: {
             include: {

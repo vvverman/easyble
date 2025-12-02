@@ -2,6 +2,8 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "@prisma/client";
 import { nextCookies } from "better-auth/next-js";
 import { betterAuth } from "better-auth";
+import { magicLink } from "better-auth/plugins";
+import { sendMail } from "./lib/mailer";
 
 const client = new PrismaClient();
 
@@ -10,7 +12,34 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   appName: "easyble",
-  plugins: [nextCookies()],
+  plugins: [
+    nextCookies(),
+    magicLink({
+      async sendMagicLink({ email, url }) {
+        const appUrl =
+          process.env.BETTER_AUTH_URL ??
+          process.env.NEXT_PUBLIC_APP_URL ??
+          "http://localhost:3100";
+        const magicLink = url.startsWith("http")
+          ? url
+          : `${appUrl.replace(/\/$/, "")}${url}`;
+
+        try {
+          console.log("[auth] Sending magic link to", email, "->", magicLink);
+          await sendMail({
+            to: email,
+            subject: "Easyble: вход по ссылке",
+            text: `Перейдите по ссылке, чтобы войти: ${magicLink}`,
+            html: `<p>Перейдите по ссылке, чтобы войти:</p><p><a href="${magicLink}">${magicLink}</a></p>`,
+          });
+          console.log("[auth] Magic link sent to", email);
+        } catch (err) {
+          console.error("Failed to send magic link", err);
+          throw err;
+        }
+      },
+    }),
+  ],
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,

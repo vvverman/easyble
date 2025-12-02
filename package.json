@@ -10,7 +10,8 @@
     "dev": "next dev -p 3100",
     "build": "DATABASE_URL=${DATABASE_URL:-postgresql://user:password@localhost:5432/postgres} prisma generate && next build",
     "start": "next start -p 3100",
-    "lint": "eslint"
+    "lint": "eslint",
+    "claim-all-data": "node scripts/claim-all-data.mjs"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.16",

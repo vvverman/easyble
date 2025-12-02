@@ -1,9 +1,11 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { headers } from "next/headers"
 import prisma from "~/lib/prisma"
 import KanbanBoardWrapper from "~/features/kanban/board"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { AvatarGroup } from "@/components/animate-ui/components/animate/avatar-group"
+import { auth } from "@/auth"
 
 interface BoardPageProps {
   params: Promise<{
@@ -50,8 +52,13 @@ export async function generateMetadata(
 export default async function BoardPage({ params }: BoardPageProps) {
   const { boardId } = await params
 
-  const board = await prisma.board.findUnique({
-    where: { id: boardId },
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  const userId = session?.user?.id
+
+  const board = await prisma.board.findFirst({
+    where: { id: boardId, project: { ownerId: userId ?? undefined } },
     include: {
       project: {
         include: { owner: true },

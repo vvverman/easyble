@@ -32,6 +32,7 @@ export default async function ProjectsLayout({
   }
 
   const teams = await prisma.team.findMany({
+    where: { ownerId: userId },
     orderBy: { createdAt: "asc" },
   })
 
@@ -40,6 +41,7 @@ export default async function ProjectsLayout({
   }
 
   const projects = await prisma.project.findMany({
+    where: { ownerId: userId },
     include: {
       boards: {
         select: { id: true, title: true },

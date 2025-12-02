@@ -1,6 +1,8 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { headers } from "next/headers"
 import prisma from "~/lib/prisma"
 import { createBoard } from "~/features/boards/actions"
+import { auth } from "@/auth"
 
 interface NewBoardPageProps {
   params: Promise<{
@@ -14,8 +16,16 @@ export const dynamic = "force-dynamic"
 export default async function NewBoardPage({ params }: NewBoardPageProps) {
   const { projectId } = await params
 
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  const userId = session?.user?.id
+  if (!userId) {
+    redirect("/login")
+  }
+
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, ownerId: userId },
     select: { id: true, title: true },
   })
 

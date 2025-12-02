@@ -24,9 +24,14 @@ function getConfig(): MailerConfig {
     throw new Error(`Missing SMTP config: ${missing.join(", ")}`)
   }
 
+  const parsedPort = parseInt(env.SMTP_PORT!, 10)
+  if (Number.isNaN(parsedPort)) {
+    throw new Error(`SMTP_PORT must be a number, got "${env.SMTP_PORT}"`)
+  }
+
   return {
     host: env.SMTP_HOST!,
-    port: Number(env.SMTP_PORT),
+    port: parsedPort,
     user: env.SMTP_USER!,
     pass: env.SMTP_PASS!,
     from: env.SMTP_FROM!,
@@ -47,6 +52,9 @@ function getTransporter() {
       user: cfg.user,
       pass: cfg.pass,
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   })
   return cachedTransporter
 }
