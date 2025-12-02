@@ -89,7 +89,8 @@ jobs:
       - name: Rsync to VPS
         if: ${{ steps.deploy_check.outputs.skip != 'true' }}
         run: |
-          RSYNC_RSH="ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes"
+          PORT=${SSH_PORT//\"/}
+          RSYNC_RSH="ssh -p $PORT -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes"
           rsync -az --delete \
             --exclude ".git" \
             --exclude "node_modules" \
@@ -99,7 +100,8 @@ jobs:
       - name: Install & restart on VPS
         if: ${{ steps.deploy_check.outputs.skip != 'true' }}
         run: |
-          SSH_CMD="ssh -p \"$SSH_PORT\" -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes"
+          PORT=${SSH_PORT//\"/}
+          SSH_CMD="ssh -p $PORT -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes"
           $SSH_CMD "$SSH_USER@$SSH_HOST" <<'EOF'
           set -euo pipefail
           cd "$APP_DIR"
