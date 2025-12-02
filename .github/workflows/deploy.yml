@@ -102,7 +102,7 @@ jobs:
         if: ${{ steps.deploy_check.outputs.skip != 'true' }}
         run: |
           PORT=${SSH_PORT//\"/}
-          ssh -p $PORT -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes "$SSH_USER@$SSH_HOST" <<'EOF'
+          ssh -p $PORT -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes "$SSH_USER@$SSH_HOST" <<EOF
           set -euo pipefail
           cd "$APP_DIR"
           npm ci --omit=dev
