@@ -33,13 +33,19 @@ export function LoginForm({
     if (!emailValue) return
     try {
       setIsSubmitting(true)
-      await authClient.signIn.magicLink({
-        email: emailValue,
-        callbackURL: "/login/complete",
+      const res = await fetch("/api/auth/email-otp/send-verification-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailValue, type: "sign-in" }),
       })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.message || "Не удалось отправить код")
+      }
+      window.location.href = `/login/otp?email=${encodeURIComponent(emailValue)}`
     } catch (err: any) {
       console.error(err)
-      setError(err?.message ?? "Failed to send sign-in link")
+      setError(err?.message ?? "Не удалось отправить код")
     } finally {
       setIsSubmitting(false)
     }

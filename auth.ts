@@ -2,7 +2,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "@prisma/client";
 import { nextCookies } from "better-auth/next-js";
 import { betterAuth } from "better-auth";
-import { magicLink } from "better-auth/plugins";
+import { magicLink, emailOTP } from "better-auth/plugins";
 import { sendMail } from "./lib/mailer";
 
 const client = new PrismaClient();
@@ -14,6 +14,26 @@ export const auth = betterAuth({
   appName: "easyble",
   plugins: [
     nextCookies(),
+    emailOTP({
+      otpLength: 6,
+      expiresIn: 300,
+      storeOTP: "hashed",
+      async sendVerificationOTP({ email, otp, type }) {
+        const subject =
+          type === "forget-password"
+            ? "Easyble: восстановление доступа"
+            : "Easyble: код входа";
+        const text = `Ваш код: ${otp}. Действителен 5 минут.`;
+        const html = `<p>Ваш код:</p><div style="font-size:24px;font-weight:700;letter-spacing:4px;">${otp}</div><p>Код действует 5 минут.</p>`;
+
+        try {
+          await sendMail({ to: email, subject, text, html });
+        } catch (err) {
+          console.error("Failed to send OTP email", err);
+          throw err;
+        }
+      },
+    }),
     magicLink({
       async sendMagicLink({ email, url }) {
         const appUrl =
