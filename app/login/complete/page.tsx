@@ -27,11 +27,31 @@ export default function CompleteProfilePage() {
   const email = session?.user?.email ?? ""
 
   useEffect(() => {
-    if (session?.user) {
-      setDisplayName(session.user.name ?? "")
-      setUsername(getUsernameFromEmail(session.user.email))
-      setAvatar(session.user.image ?? "")
+    const load = async () => {
+      // Try to fetch current user; if already completed, redirect
+      try {
+        const res = await fetch("/api/profile/self")
+        if (res.ok) {
+          const { user } = await res.json()
+          if (user?.name && user?.username) {
+            router.push("/projects")
+            return
+          }
+          setDisplayName(user?.name ?? session?.user?.name ?? "")
+          setUsername(user?.username ?? getUsernameFromEmail(user?.email ?? session?.user?.email ?? ""))
+          setAvatar(user?.image ?? session?.user?.image ?? "")
+          return
+        }
+      } catch (err) {
+        console.error(err)
+      }
+      if (session?.user) {
+        setDisplayName(session.user.name ?? "")
+        setUsername(getUsernameFromEmail(session.user.email))
+        setAvatar(session.user.image ?? "")
+      }
     }
+    load()
   }, [session])
 
   const canSubmit = useMemo(() => {

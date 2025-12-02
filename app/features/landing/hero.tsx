@@ -60,11 +60,11 @@ export function Hero() {
 
         <div className="mt-10 flex items-center justify-center gap-2">
           <Button asChild>
-            <Link href="/example">Создать команду</Link>
+            <Link href="/login">Создать команду</Link>
           </Button>
 
           <Button asChild className="text-foreground" variant="link">
-            <a href="...">
+            <a href="mailto:info@easyble.ru">
               Связаться
               <BookTextIcon />
             </a>
