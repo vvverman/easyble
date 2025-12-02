@@ -22,6 +22,7 @@ import {
   Rocket,
   Layers,
   Cat,
+  PanelLeft,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -32,6 +33,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  useSidebar,
   SidebarRail,
 } from "@/components/ui/sidebar"
 
@@ -82,6 +84,7 @@ function AppSidebarInner({
   teams = [],
   ...props
 }: AppSidebarProps) {
+  const { toggleSidebar, state } = useSidebar()
   const searchParams = useSearchParams()
   const teamFromUrl = searchParams.get("team") || undefined
 
@@ -141,6 +144,15 @@ function AppSidebarInner({
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          className="mt-2 flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          data-sidebar="footer-trigger"
+        >
+          <PanelLeft className="h-4 w-4" />
+          {state !== "collapsed" && <span>Скрыть меню</span>}
+        </button>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

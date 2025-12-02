@@ -3,21 +3,23 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
 
 export function OtpForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get("email") || ""
-  const [code, setCode] = useState("")
+  const length = 6
+  const [digits, setDigits] = useState<string[]>(Array(length).fill(""))
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([])
 
   useEffect(() => {
-    inputRef.current?.focus()
+    inputRefs.current[0]?.focus()
   }, [])
+
+  const code = digits.join("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,8 +28,8 @@ export function OtpForm() {
       setError("Email не указан")
       return
     }
-    if (code.length < 6) {
-      setError("Введите 6-значный код")
+    if (code.length < length) {
+      setError(`Введите ${length}-значный код`)
       return
     }
     try {
@@ -64,6 +66,50 @@ export function OtpForm() {
     }
   }
 
+  const setDigit = (index: number, value: string) => {
+    const char = value.replace(/\D/g, "").slice(-1)
+    if (!char && value.length > 1) return
+    setDigits((prev) => {
+      const next = [...prev]
+      next[index] = char ?? ""
+      return next
+    })
+  }
+
+  const handleChange = (index: number, value: string) => {
+    setDigit(index, value)
+    if (value && index < length - 1) {
+      inputRefs.current[index + 1]?.focus()
+    }
+  }
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus()
+    }
+    if (e.key === "ArrowLeft" && index > 0) {
+      e.preventDefault()
+      inputRefs.current[index - 1]?.focus()
+    }
+    if (e.key === "ArrowRight" && index < length - 1) {
+      e.preventDefault()
+      inputRefs.current[index + 1]?.focus()
+    }
+  }
+
+  const handlePaste = (index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, length)
+    if (!text) return
+    const next = [...digits]
+    for (let i = 0; i < text.length && index + i < length; i++) {
+      next[index + i] = text[i]
+    }
+    setDigits(next)
+    const focusIdx = Math.min(index + text.length, length - 1)
+    inputRefs.current[focusIdx]?.focus()
+  }
+
   if (!email) {
     return (
       <div className="text-sm text-muted-foreground">
@@ -74,30 +120,47 @@ export function OtpForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-sm">
-      <div className="space-y-2">
-        <p className="text-sm text-muted-foreground">
-          Мы отправили код на {email}
-        </p>
-        <Input
-          ref={inputRef}
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={6}
-          placeholder="••••••"
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\\D/g, "").slice(0, 6))}
-          className="text-center text-lg tracking-[0.4em]"
-        />
+      <p className="text-sm text-muted-foreground">
+        We sent a {length}-digit code to your email {email}
+      </p>
+
+      <div className="flex items-center justify-between gap-2">
+        {Array.from({ length }).map((_, idx) => (
+          <input
+            key={idx}
+            ref={(el) => (inputRefs.current[idx] = el)}
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={1}
+            value={digits[idx]}
+            onChange={(e) => handleChange(idx, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(idx, e)}
+            onPaste={(e) => handlePaste(idx, e)}
+            className="h-12 w-10 rounded-md border border-white/10 bg-white/5 text-center text-lg font-semibold text-white shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        ))}
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        Enter the {length}-digit code sent to your email.
+      </p>
+
       {error && <p className="text-xs text-destructive">{error}</p>}
-      <div className="flex gap-2">
-        <Button type="submit" className="flex-1" disabled={isSubmitting}>
-          {isSubmitting ? "Проверяем..." : "Войти"}
-        </Button>
-        <Button type="button" variant="outline" onClick={handleResend}>
-          Отправить код снова
-        </Button>
-      </div>
+
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Verifying..." : "Verify"}
+      </Button>
+
+      <p className="text-xs text-muted-foreground text-center">
+        Didn&apos;t receive the code?{" "}
+        <button
+          type="button"
+          onClick={handleResend}
+          className="underline underline-offset-4 text-foreground"
+        >
+          Resend
+        </button>
+      </p>
     </form>
   )
 }

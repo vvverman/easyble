@@ -14,6 +14,8 @@ model User {
   name          String?
   projects      Project[]
   teams         Team[]
+  boardMembers  BoardMember[]
+  sentBoardInvites BoardInvite[] @relation("BoardInviteInviter")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   emailVerified Boolean   @default(false)
@@ -57,9 +59,54 @@ model Board {
   project   Project  @relation(fields: [projectId], references: [id])
   projectId String
   columns   Column[]
+  members   BoardMember[]
+  invites   BoardInvite[]
   createdAt DateTime @default(now())
 
   @@index([projectId])
+}
+
+model BoardMember {
+  id        String   @id @default(cuid())
+  board     Board    @relation(fields: [boardId], references: [id])
+  boardId   String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  role      BoardMemberRole @default(VIEWER)
+  createdAt DateTime @default(now())
+
+  @@unique([boardId, userId])
+  @@index([boardId])
+  @@index([userId])
+}
+
+model BoardInvite {
+  id          String             @id @default(cuid())
+  board       Board              @relation(fields: [boardId], references: [id])
+  boardId     String
+  email       String
+  token       String             @unique
+  status      BoardInviteStatus  @default(PENDING)
+  expiresAt   DateTime
+  invitedBy   User?              @relation("BoardInviteInviter", fields: [invitedById], references: [id])
+  invitedById String?
+  acceptedAt  DateTime?
+  createdAt   DateTime           @default(now())
+
+  @@index([boardId])
+  @@index([email])
+  @@index([status])
+}
+
+enum BoardMemberRole {
+  VIEWER
+  EDITOR
+}
+
+enum BoardInviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
 }
 
 model Column {
