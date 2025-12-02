@@ -7,14 +7,6 @@ import type { ComponentProps } from 'react';
 
 import { Button, buttonVariants } from '~/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from '~/components/ui/dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -31,16 +23,6 @@ export function Header({ className, ...props }: ComponentProps<'header'>) {
   const isExampleActive = pathname === '/example';
 
   const { data: session, isPending } = authClient.useSession();
-
-  const handleGoogleSignIn = async () => {
-    try {
-      await authClient.signIn.social({
-        provider: 'google',
-      });
-    } catch (error) {
-      console.error('Google sign-in failed', error);
-    }
-  };
 
   const handleSignOut = async () => {
     try {
@@ -117,29 +99,12 @@ export function Header({ className, ...props }: ComponentProps<'header'>) {
             </DropdownMenu>
           ) : (
             !isPending && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    Войти
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Войти в Easyble</DialogTitle>
-                    <DialogDescription>
-                      Авторизуйтесь, чтобы сохранять свои доски и задачи.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <Button
-                    className="mt-4 w-full"
-                    variant="default"
-                    onClick={handleGoogleSignIn}
-                  >
-                    Войти через Google
-                  </Button>
-                </DialogContent>
-              </Dialog>
+              <Link
+                href="/login"
+                className={buttonVariants({ size: 'sm', variant: 'outline' })}
+              >
+                Войти
+              </Link>
             )
           )}
         </div>
