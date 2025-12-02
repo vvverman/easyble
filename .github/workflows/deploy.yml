@@ -117,7 +117,7 @@ jobs:
           fi
 
           cd "$APP_DIR"
-          npm ci --omit=dev
+          npm ci
           npm run build
           pm2 describe easyble >/dev/null 2>&1 && pm2 restart easyble --update-env || pm2 start npm --name easyble -- start
           pm2 save
