@@ -13,7 +13,7 @@ jobs:
     env:
       SSH_HOST: ${{ vars.VPS_HOST }}
       SSH_USER: ${{ vars.VPS_USER }}
-      SSH_PORT: ${{ vars.VPS_PORT || '22' }}
+      SSH_PORT: ${{ vars.VPS_PORT || 22 }}
       SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
       SSH_PASSPHRASE: ${{ secrets.VPS_SSH_PASSPHRASE || '' }}
       APP_DIR: ${{ vars.VPS_APP_DIR }}
@@ -101,8 +101,7 @@ jobs:
         if: ${{ steps.deploy_check.outputs.skip != 'true' }}
         run: |
           PORT=${SSH_PORT//\"/}
-          SSH_CMD="ssh -p $PORT -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes"
-          $SSH_CMD "$SSH_USER@$SSH_HOST" <<'EOF'
+          ssh -p $PORT -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes "$SSH_USER@$SSH_HOST" <<'EOF'
           set -euo pipefail
           cd "$APP_DIR"
           npm ci --omit=dev
