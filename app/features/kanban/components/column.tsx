@@ -55,6 +55,7 @@ type Card = {
     authorEmail?: string | null;
     authorImage?: string | null;
   }[];
+  completed?: boolean;
 };
 
 type Column = {

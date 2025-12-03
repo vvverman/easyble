@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { Sheet, SheetContent } from '../../../../components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '../../../../components/ui/sheet';
 import { Calendar } from '../../../../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../../../../components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -45,9 +45,11 @@ type Card = {
   history?: {
     id: string;
     when?: string | null;
+    whenTs?: number | null;
     who?: string | null;
     what?: string | null;
   }[];
+  completed?: boolean;
 };
 
 type CardProps = {
@@ -83,12 +85,23 @@ function formatTimeValue(date: Date) {
 export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCard }: CardProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(card.title);
-  const [isCompleted, setIsCompleted] = useState(false);
   const [description, setDescription] = useState('');
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState(card.comments ?? []);
   const [showComments, setShowComments] = useState(true);
   const [showHistory, setShowHistory] = useState(true);
+  const [historyState, setHistoryState] = useState(
+    card.history ??
+      [
+        {
+          id: `${card.id}-created`,
+          when: 'Создано',
+          whenTs: Date.now(),
+          who: card.ownerName || card.ownerEmail || 'Система',
+          what: 'Создал задачу',
+        },
+      ],
+  );
 
   const [taskType, setTaskType] = useState<TaskType>('task');
 
@@ -98,10 +111,13 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
   const [deadlineTime, setDeadlineTime] = useState<string>('');
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(card.completed ?? false);
 
   useEffect(() => {
     setDraftTitle(card.title);
     setIsEditingTitle(false);
+    setIsCompleted(card.completed ?? false);
   }, [card.title]);
 
   const initials = useMemo(() => {
@@ -129,6 +145,27 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
       setStartDate(now);
       setStartTime(formatTimeValue(now));
     }
+  }
+
+  function appendHistory(what: string) {
+    const now = new Date();
+    const ts = now.getTime();
+    setHistoryState((prev) => [
+      ...prev,
+      {
+        id: `${card.id}-hist-${now.getTime()}-${prev.length}`,
+        when: now.toLocaleString('ru-RU', {
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        whenTs: ts,
+        who: card.ownerName || card.ownerEmail || 'Вы',
+        what,
+      },
+    ]);
   }
 
   function handleSave() {
@@ -167,19 +204,46 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
 
   function handleCompleteClick() {
     onCompleteCard(card.id);
-    setIsSheetOpen(false);
+    setIsRunning(false);
+    setIsCompleted(true);
+    appendHistory('Пометил как выполнено');
   }
 
-  const historyEntries =
-    card.history ??
-    [
-      {
-        id: `${card.id}-created`,
-        when: 'Создано',
-        who: card.ownerName || card.ownerEmail || 'Система',
-        what: 'Создал задачу',
-      },
-    ];
+  function handleStartPause() {
+    if (isCompleted) return;
+    ensureDefaultStart();
+    if (isRunning) {
+      setIsRunning(false);
+      appendHistory('Поставил на паузу');
+    } else {
+      setIsRunning(true);
+      appendHistory('Начал выполнение');
+    }
+  }
+
+  const historyEntries = historyState;
+
+  const feedEntries = useMemo(() => {
+    const merged: { type: 'comment' | 'history'; ts: number; item: any }[] = [];
+    if (showComments) {
+      comments.forEach((c, idx) => {
+        const ts = c.createdAt ? new Date(c.createdAt).getTime() : idx;
+        merged.push({ type: 'comment', ts: isNaN(ts) ? idx : ts, item: c });
+      });
+    }
+    if (showHistory) {
+      historyEntries.forEach((h, idx) => {
+        const ts =
+          typeof h.whenTs === 'number'
+            ? h.whenTs
+            : h.when
+              ? new Date(h.when).getTime()
+              : idx;
+        merged.push({ type: 'history', ts: isNaN(ts) ? idx : ts, item: h });
+      });
+    }
+    return merged.sort((a, b) => a.ts - b.ts);
+  }, [comments, historyEntries, showComments, showHistory]);
 
   const creatorLabel = card.ownerName || card.ownerEmail || 'Неизвестно';
   const pathLabel = card.path || 'Team/Project/Board';
@@ -196,6 +260,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
 
             {/* Хедер */}
             <div className="border-b px-6 py-3">
+              <SheetTitle className="sr-only">Карточка задачи #{card.displayId}</SheetTitle>
               <div className="text-xs font-medium text-muted-foreground">#{card.displayId}</div>
             </div>
 
@@ -204,21 +269,34 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
               {/* Левая колонка */}
               <div className="flex-1">
                 <div className="h-full px-6 py-4 overflow-y-auto">
-                  <div className="space-y-5">
-                  {/* Кнопки Выполнить / Старт */}
+                <div className="space-y-5">
+                  {/* Кнопки / статус */}
                   <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-4"
-                      type="button"
-                      onClick={handleCompleteClick}
-                    >
-                      Выполнить
-                    </Button>
-                    <Button size="sm" className="h-8 px-4" type="button">
-                      Старт
-                    </Button>
+                    {isCompleted ? (
+                      <span className="text-xs font-semibold text-emerald-500">
+                        Статус: выполнена
+                      </span>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-4"
+                          type="button"
+                          onClick={handleCompleteClick}
+                        >
+                          Выполнить
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="h-8 px-4"
+                          type="button"
+                          onClick={handleStartPause}
+                        >
+                          {isRunning ? 'Пауза' : 'Старт'}
+                        </Button>
+                      </>
+                    )}
                   </div>
 
                   {/* Заголовок */}
@@ -406,81 +484,81 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
             <div className="flex flex-1 flex-col">
               <div className="flex-1 px-6 py-4 space-y-3">
                 <div className="h-full overflow-y-auto space-y-3 text-xs">
-                  {showHistory &&
-                    historyEntries.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="text-[11px] text-muted-foreground text-center flex items-center justify-center gap-2"
-                      >
-                        {entry.when && <span>{entry.when}</span>}
-                        {entry.when && (entry.who || entry.what) && (
-                          <span className="mx-1 text-muted-foreground/60">•</span>
-                        )}
-                        {entry.who && <span className="truncate">{entry.who}</span>}
-                        {entry.who && entry.what && (
-                          <span className="mx-1 text-muted-foreground/60">•</span>
-                        )}
-                        {entry.what && <span className="truncate">{entry.what}</span>}
-                      </div>
-                    ))}
+                  {feedEntries.length === 0 ? (
+                    <div className="rounded-md border px-3 py-2 text-muted-foreground">
+                      Пока нет записей
+                    </div>
+                  ) : (
+                    feedEntries.map((entry, idx) => {
+                      if (entry.type === 'history') {
+                        const h = entry.item as typeof historyEntries[number];
+                        return (
+                          <div
+                            key={`hist-${h.id}-${idx}`}
+                            className="text-[11px] text-muted-foreground text-center flex items-center justify-center gap-2"
+                          >
+                            {h.when && <span>{h.when}</span>}
+                            {h.when && (h.who || h.what) && (
+                              <span className="mx-1 text-muted-foreground/60">•</span>
+                            )}
+                            {h.who && <span className="truncate">{h.who}</span>}
+                            {h.who && h.what && (
+                              <span className="mx-1 text-muted-foreground/60">•</span>
+                            )}
+                            {h.what && <span className="truncate">{h.what}</span>}
+                          </div>
+                        );
+                      }
 
-                  {showComments &&
-                    (comments.length > 0 ? (
-                      <div className="space-y-2">
-                        {comments.map((c, idx) => {
-                          const author = c.authorName || c.authorEmail || 'Без имени';
-                          const initials =
-                            (author ?? '')
-                              .split(/\s+/)
-                              .map((p) => p[0] || '')
-                              .join('')
-                              .slice(0, 2)
-                              .toUpperCase() || '?';
-                          const when = c.createdAt
-                            ? new Date(c.createdAt).toLocaleString('ru-RU', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
-                            : '';
-                          const bubbleTone =
-                            idx % 2 === 0
-                              ? 'bg-muted/80 border border-border/70'
-                              : 'bg-primary/10 border border-primary/20';
+                      const c = entry.item as (typeof comments)[number];
+                      const author = c.authorName || c.authorEmail || 'Без имени';
+                      const initials =
+                        (author ?? '')
+                          .split(/\s+/)
+                          .map((p) => p[0] || '')
+                          .join('')
+                          .slice(0, 2)
+                          .toUpperCase() || '?';
+                      const when = c.createdAt
+                        ? new Date(c.createdAt).toLocaleString('ru-RU', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : '';
+                      const bubbleTone =
+                        idx % 2 === 0
+                          ? 'bg-muted/80 border border-border/70'
+                          : 'bg-primary/10 border border-primary/20';
 
-                          return (
-                            <div key={c.id} className="flex items-start gap-2">
-                              <Avatar className="h-7 w-7 border">
-                                {c.authorImage ? (
-                                  <AvatarImage src={c.authorImage} alt={author} />
-                                ) : null}
-                                <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
-                              </Avatar>
-                              <div className="flex flex-1 flex-col">
-                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                                  <span className="font-medium text-foreground">{author}</span>
-                                  <span>{when}</span>
-                                </div>
-                                <div
-                                  className={cn(
-                                    'mt-1 w-fit max-w-[80%] rounded-2xl px-3 py-2 text-[13px] leading-snug text-foreground',
-                                    bubbleTone,
-                                  )}
-                                >
-                                  <span className="whitespace-pre-wrap break-words">{c.content}</span>
-                                </div>
-                              </div>
+                      return (
+                        <div key={`comm-${c.id}-${idx}`} className="flex items-start gap-2">
+                          <Avatar className="h-7 w-7 border">
+                            {c.authorImage ? (
+                              <AvatarImage src={c.authorImage} alt={author} />
+                            ) : null}
+                            <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-1 flex-col">
+                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                              <span className="font-medium text-foreground">{author}</span>
+                              <span>{when}</span>
                             </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="rounded-md border px-3 py-2 text-muted-foreground">
-                        Пока нет комментариев
-                      </div>
-                    ))}
+                            <div
+                              className={cn(
+                                'mt-1 w-fit max-w-[80%] rounded-2xl px-3 py-2 text-[13px] leading-snug text-foreground',
+                                bubbleTone,
+                              )}
+                            >
+                              <span className="whitespace-pre-wrap break-words">{c.content}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
@@ -541,21 +619,23 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
       {/* Карточка в колонке */}
       <KanbanBoardCard
         data={card}
-        onClick={() => {
-          setDraftTitle(card.title);
-          ensureDefaultStart();
-          setIsEditingTitle(false);
-          setIsSheetOpen(true);
-        }}
-        className="space-y-2"
-      >
-        <KanbanBoardCardDescription
-          className={`break-all text-xs leading-snug ${
+      onClick={() => {
+        setDraftTitle(card.title);
+        ensureDefaultStart();
+        setIsEditingTitle(false);
+        setIsSheetOpen(true);
+        setIsRunning(false);
+        setIsCompleted(card.completed ?? isCompleted);
+      }}
+      className="space-y-2"
+    >
+      <KanbanBoardCardDescription
+        className={`break-all text-xs leading-snug ${
             isCompleted ? 'text-muted-foreground line-through' : ''
           }`}
-        >
-          {card.title}
-        </KanbanBoardCardDescription>
+      >
+        {card.title}
+      </KanbanBoardCardDescription>
 
         <div className="mt-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -564,13 +644,29 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
               tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
-                setIsCompleted((prev) => !prev);
+                setIsCompleted((prev) => {
+                  const next = !prev;
+                  if (next) {
+                    appendHistory('Пометил как выполнено');
+                  } else {
+                    appendHistory('Вернул в работу');
+                  }
+                  return next;
+                });
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   e.stopPropagation();
-                  setIsCompleted((prev) => !prev);
+                  setIsCompleted((prev) => {
+                    const next = !prev;
+                    if (next) {
+                      appendHistory('Пометил как выполнено');
+                    } else {
+                      appendHistory('Вернул в работу');
+                    }
+                    return next;
+                  });
                 }
               }}
               className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${

@@ -53,6 +53,7 @@ type Card = {
     authorEmail?: string | null;
     authorImage?: string | null;
   }[];
+  completed?: boolean;
 };
 
 type Column = {
@@ -113,6 +114,7 @@ export default function KanbanBoardWrapper({
         authorEmail: c.author?.email ?? null,
         authorImage: c.author?.image ?? null,
       })),
+      completed: (c.title ?? '').toLowerCase().includes('done'),
     })),
   }));
 
