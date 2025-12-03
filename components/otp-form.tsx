@@ -37,7 +37,6 @@ export function OtpForm() {
       await authClient.signIn.emailOtp({
         email,
         otp: code,
-        callbackURL: "/login/complete",
       })
       router.push("/login/complete")
     } catch (err: any) {
@@ -125,15 +124,17 @@ export function OtpForm() {
       </p>
 
       <div className="flex items-center justify-between gap-2">
-        {Array.from({ length }).map((_, idx) => (
-          <input
-            key={idx}
-            ref={(el) => (inputRefs.current[idx] = el)}
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={1}
-            value={digits[idx]}
-            onChange={(e) => handleChange(idx, e.target.value)}
+          {Array.from({ length }).map((_, idx) => (
+            <input
+              key={idx}
+              ref={(el) => {
+                inputRefs.current[idx] = el
+              }}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={1}
+              value={digits[idx]}
+              onChange={(e) => handleChange(idx, e.target.value)}
             onKeyDown={(e) => handleKeyDown(idx, e)}
             onPaste={(e) => handlePaste(idx, e)}
             className="h-12 w-10 rounded-md border border-white/10 bg-white/5 text-center text-lg font-semibold text-white shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"

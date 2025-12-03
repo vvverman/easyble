@@ -9,7 +9,7 @@ import prisma from "~/lib/prisma";
 export async function createProject(formData: FormData) {
   const title = (formData.get("title") as string).trim();
   const icon = ((formData.get("icon") as string | null) || "FolderKanban").trim();
-  const teamId = (formData.get("teamId") as string | null)?.trim() || null;
+  const submittedTeamId = (formData.get("teamId") as string | null)?.trim() || null;
 
   const headersList = await headers();
   const session = await auth.api.getSession({
@@ -38,12 +38,34 @@ export async function createProject(formData: FormData) {
     select: { id: true },
   });
 
+  // Всегда нужен teamId. Если не передан — берём первую команду пользователя или создаём новую.
+  let teamId = submittedTeamId;
+  if (!teamId) {
+    const existingTeam = await prisma.team.findFirst({
+      where: { ownerId: user.id },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    teamId =
+      existingTeam?.id ||
+      (
+        await prisma.team.create({
+          data: {
+            name: "Team",
+            ownerId: user.id,
+          },
+          select: { id: true },
+        })
+      ).id;
+  }
+
   const project = await prisma.project.create({
     data: {
       title,
       icon,
       ownerId: user.id,
-      teamId: teamId && teamId.length > 0 ? teamId : null,
+      teamId,
       boards: {
         create: {
           title: 'Main board',

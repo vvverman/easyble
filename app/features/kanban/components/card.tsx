@@ -7,9 +7,9 @@ import {
   KanbanBoardCardButton,
   KanbanBoardCardDescription,
 } from '@/new-york/ui/kanban';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Textarea } from '~/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +19,9 @@ import {
 import { Sheet, SheetContent } from '../../../../components/ui/sheet';
 import { Calendar } from '../../../../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../../../../components/ui/popover';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/animate-ui/components/base/switch';
+import { cn } from '@/lib/utils';
 
 const MAX_TITLE_LENGTH = 250;
 
@@ -27,6 +30,24 @@ type Card = {
   title: string;
   order: number;
   displayId: string;
+  ownerName?: string | null;
+  ownerEmail?: string | null;
+  ownerImage?: string | null;
+  path?: string | null;
+  comments?: {
+    id: string;
+    content: string;
+    createdAt?: string | null;
+    authorName?: string | null;
+    authorEmail?: string | null;
+    authorImage?: string | null;
+  }[];
+  history?: {
+    id: string;
+    when?: string | null;
+    who?: string | null;
+    what?: string | null;
+  }[];
 };
 
 type CardProps = {
@@ -65,6 +86,9 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
   const [isCompleted, setIsCompleted] = useState(false);
   const [description, setDescription] = useState('');
   const [comment, setComment] = useState('');
+  const [comments, setComments] = useState(card.comments ?? []);
+  const [showComments, setShowComments] = useState(true);
+  const [showHistory, setShowHistory] = useState(true);
 
   const [taskType, setTaskType] = useState<TaskType>('task');
 
@@ -126,7 +150,18 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
   function handleSendComment() {
     const trimmed = comment.trim();
     if (!trimmed) return;
-    // TODO: отправка комментария
+    const now = new Date();
+    setComments((prev) => [
+      ...prev,
+      {
+        id: `${card.id}-${now.getTime()}`,
+        content: trimmed,
+        createdAt: now.toISOString(),
+        authorName: 'Вы',
+        authorEmail: card.ownerEmail ?? undefined,
+        authorImage: card.ownerImage ?? undefined,
+      },
+    ]);
     setComment('');
   }
 
@@ -135,6 +170,20 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
     setIsSheetOpen(false);
   }
 
+  const historyEntries =
+    card.history ??
+    [
+      {
+        id: `${card.id}-created`,
+        when: 'Создано',
+        who: card.ownerName || card.ownerEmail || 'Система',
+        what: 'Создал задачу',
+      },
+    ];
+
+  const creatorLabel = card.ownerName || card.ownerEmail || 'Неизвестно';
+  const pathLabel = card.path || 'Team/Project/Board';
+
   return (
     <>
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -142,19 +191,20 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
           side="right"
           className="flex h-screen max-h-screen w-[50vw] min-w-[320px] sm:max-w-none flex-col border-l bg-background p-0"
         >
-          {/* Хедер */}
-          <div className="border-b px-6 py-3">
-            <div className="text-xs font-medium text-muted-foreground">#{card.displayId}</div>
-          </div>
-
-          {/* Тело: две равные колонки + вертикальный разделитель */}
-          <div className="relative flex flex-1 overflow-hidden">
+          <div className="relative flex h-full flex-col">
             <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px bg-border" />
 
-            {/* Левая колонка */}
-            <div className="flex-1">
-              <div className="h-full px-6 py-4 overflow-y-auto">
-                <div className="space-y-5">
+            {/* Хедер */}
+            <div className="border-b px-6 py-3">
+              <div className="text-xs font-medium text-muted-foreground">#{card.displayId}</div>
+            </div>
+
+            {/* Тело: две равные колонки */}
+            <div className="flex flex-1 overflow-hidden">
+              {/* Левая колонка */}
+              <div className="flex-1">
+                <div className="h-full px-6 py-4 overflow-y-auto">
+                  <div className="space-y-5">
                   {/* Кнопки Выполнить / Старт */}
                   <div className="flex items-center gap-3">
                     <Button
@@ -325,9 +375,14 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
                     </div>
 
                     <div className="space-y-1">
-                      <div className="text-muted-foreground">Проект</div>
-                      <Button variant="outline" size="sm" className="h-7 justify-start text-xs">
-                        Выбрать проект…
+                      <div className="text-muted-foreground">Путь</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 justify-start text-xs cursor-default"
+                        disabled
+                      >
+                        {pathLabel}
                       </Button>
                     </div>
 
@@ -339,7 +394,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
                         className="h-7 justify-start text-xs cursor-default"
                         disabled
                       >
-                        Неизвестно
+                        {creatorLabel}
                       </Button>
                     </div>
                   </div>
@@ -349,19 +404,112 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
 
             {/* Правая колонка: комментарии */}
             <div className="flex flex-1 flex-col">
-              <div className="flex-1 px-6 py-4">
-                <div className="mb-3 text-xs font-medium text-muted-foreground">
-                  Комментарии
-                </div>
-                <div className="h-full overflow-y-auto">
-                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                    Без комментариев
-                  </div>
+              <div className="flex-1 px-6 py-4 space-y-3">
+                <div className="h-full overflow-y-auto space-y-3 text-xs">
+                  {showHistory &&
+                    historyEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="text-[11px] text-muted-foreground text-center flex items-center justify-center gap-2"
+                      >
+                        {entry.when && <span>{entry.when}</span>}
+                        {entry.when && (entry.who || entry.what) && (
+                          <span className="mx-1 text-muted-foreground/60">•</span>
+                        )}
+                        {entry.who && <span className="truncate">{entry.who}</span>}
+                        {entry.who && entry.what && (
+                          <span className="mx-1 text-muted-foreground/60">•</span>
+                        )}
+                        {entry.what && <span className="truncate">{entry.what}</span>}
+                      </div>
+                    ))}
+
+                  {showComments &&
+                    (comments.length > 0 ? (
+                      <div className="space-y-2">
+                        {comments.map((c, idx) => {
+                          const author = c.authorName || c.authorEmail || 'Без имени';
+                          const initials =
+                            (author ?? '')
+                              .split(/\s+/)
+                              .map((p) => p[0] || '')
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase() || '?';
+                          const when = c.createdAt
+                            ? new Date(c.createdAt).toLocaleString('ru-RU', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '';
+                          const bubbleTone =
+                            idx % 2 === 0
+                              ? 'bg-muted/80 border border-border/70'
+                              : 'bg-primary/10 border border-primary/20';
+
+                          return (
+                            <div key={c.id} className="flex items-start gap-2">
+                              <Avatar className="h-7 w-7 border">
+                                {c.authorImage ? (
+                                  <AvatarImage src={c.authorImage} alt={author} />
+                                ) : null}
+                                <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-1 flex-col">
+                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                  <span className="font-medium text-foreground">{author}</span>
+                                  <span>{when}</span>
+                                </div>
+                                <div
+                                  className={cn(
+                                    'mt-1 w-fit max-w-[80%] rounded-2xl px-3 py-2 text-[13px] leading-snug text-foreground',
+                                    bubbleTone,
+                                  )}
+                                >
+                                  <span className="whitespace-pre-wrap break-words">{c.content}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="rounded-md border px-3 py-2 text-muted-foreground">
+                        Пока нет комментариев
+                      </div>
+                    ))}
                 </div>
               </div>
 
               <div className="border-t">
-                <div className="px-6 py-3">
+                <div className="px-6 py-3 space-y-3">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                    <label className="flex items-center gap-2">
+                      <Switch
+                        checked={showComments}
+                        onCheckedChange={(checked) => {
+                          if (!checked && !showHistory) return;
+                          setShowComments(!!checked);
+                          if (!checked && showHistory === false) setShowHistory(true);
+                        }}
+                      />
+                      <span className="text-foreground">Комменты</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <Switch
+                        checked={showHistory}
+                        onCheckedChange={(checked) => {
+                          if (!checked && !showComments) return;
+                          setShowHistory(!!checked);
+                          if (!checked && showComments === false) setShowComments(true);
+                        }}
+                      />
+                      <span className="text-foreground">Логи</span>
+                    </label>
+                  </div>
                   <Textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
@@ -374,6 +522,9 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
                       }
                     }}
                   />
+                  <div className="text-xs text-muted-foreground">
+                    Нажмите Enter, чтобы отправить
+                  </div>
                   <div className="mt-2 flex justify-end">
                     <Button size="sm" onClick={handleSendComment}>
                       Отправить
@@ -383,6 +534,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
               </div>
             </div>
           </div>
+        </div>
         </SheetContent>
       </Sheet>
 

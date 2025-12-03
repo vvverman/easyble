@@ -1,7 +1,10 @@
 import Image from "next/image"
 import Link from "next/link"
+import { Suspense } from "react"
 
 import { OtpForm } from "@/components/otp-form"
+
+export const dynamic = "force-dynamic"
 
 export default function LoginOtpPage() {
   return (
@@ -23,7 +26,9 @@ export default function LoginOtpPage() {
               </p>
             </div>
             <div className="mt-6">
-              <OtpForm />
+              <Suspense fallback={null}>
+                <OtpForm />
+              </Suspense>
             </div>
           </div>
         </div>

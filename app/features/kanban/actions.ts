@@ -1,7 +1,9 @@
 import type { Prisma } from '@prisma/client';
 'use server';
 
+import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { auth } from '@/auth';
 import prisma from '~/lib/prisma';
 
 // Вспомогательная функция: из полного текста делаем title (<=100 символов) и description (только если >100)
@@ -95,6 +97,11 @@ export async function addTask(columnId: string, content: string) {
   const projectId = columnWithBoard.board.projectId;
   const boardId = columnWithBoard.boardId;
 
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const creatorId = session?.user?.id ?? null;
+
   const { _max } = await prisma.task.aggregate({
     where: {
       column: {
@@ -127,6 +134,7 @@ export async function addTask(columnId: string, content: string) {
         order: 0,
         status: 'TODO',
         projectTaskNumber: nextProjectTaskNumber,
+        creatorId,
       },
     });
   });
@@ -210,6 +218,51 @@ export async function updateTaskDetails(
   });
 
   revalidateBoardViews(taskWithBoard.column.board.projectId, taskWithBoard.column.boardId);
+}
+
+// --- Comments ---
+export async function addTaskComment(taskId: string, content: string) {
+  const trimmed = (content ?? '').trim();
+  if (!trimmed) return null;
+
+  const taskWithBoard = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: {
+      column: {
+        select: {
+          boardId: true,
+          board: { select: { projectId: true } },
+        },
+      },
+    },
+  });
+  if (!taskWithBoard) return null;
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const authorId = session?.user?.id ?? null;
+
+  const comment = await prisma.taskComment.create({
+    data: {
+      taskId,
+      content: trimmed,
+      authorId,
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
+  });
+
+  revalidateBoardViews(taskWithBoard.column.board.projectId, taskWithBoard.column.boardId);
+  return comment;
 }
 
 export async function deleteTask(taskId: string) {

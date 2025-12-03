@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { acceptBoardInvite } from "~/app/features/boards/invite-actions"
+import { acceptBoardInvite } from "@/app/features/boards/invite-actions"
 import { headers } from "next/headers"
 import { auth } from "@/auth"
 

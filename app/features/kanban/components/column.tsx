@@ -42,6 +42,19 @@ type Card = {
   title: string;
   order: number;
   displayId: string;
+  ownerName?: string | null;
+  ownerEmail?: string | null;
+  ownerImage?: string | null;
+  members?: { id?: string; name?: string | null; email?: string | null; image?: string | null }[];
+  path?: string;
+  comments?: {
+    id: string;
+    content: string;
+    createdAt: string;
+    authorName?: string | null;
+    authorEmail?: string | null;
+    authorImage?: string | null;
+  }[];
 };
 
 type Column = {

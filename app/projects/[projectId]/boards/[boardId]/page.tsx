@@ -70,7 +70,10 @@ export default async function BoardPage({ params }: BoardPageProps) {
     },
     include: {
       project: {
-        include: { owner: true },
+        include: {
+          owner: true,
+          team: true,
+        },
       },
       invites: true,
       columns: {
@@ -78,6 +81,41 @@ export default async function BoardPage({ params }: BoardPageProps) {
           tasks: {
             where: { archived: false },
             orderBy: { order: "asc" },
+            include: {
+              creator: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                },
+              },
+              assignees: {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      image: true,
+                    },
+                  },
+                },
+              },
+              comments: {
+                orderBy: { createdAt: "asc" },
+                include: {
+                  author: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      image: true,
+                    },
+                  },
+                },
+              },
+            },
           },
         },
         orderBy: { order: "asc" },
@@ -138,6 +176,8 @@ export default async function BoardPage({ params }: BoardPageProps) {
           <KanbanBoardWrapper
             project={project}
             boardId={board.id}
+            boardTitle={board.title}
+            teamTitle={project.team?.name ?? null}
             columns={board.columns}
           />
         </div>

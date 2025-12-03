@@ -40,6 +40,19 @@ type Card = {
   title: string;
   order: number;
   displayId: string;
+  ownerName?: string | null;
+  ownerEmail?: string | null;
+  ownerImage?: string | null;
+  members?: { id?: string; name?: string | null; email?: string | null; image?: string | null }[];
+  path?: string;
+  comments?: {
+    id: string;
+    content: string;
+    createdAt: string;
+    authorName?: string | null;
+    authorEmail?: string | null;
+    authorImage?: string | null;
+  }[];
 };
 
 type Column = {
@@ -59,12 +72,19 @@ type BoardProps = {
 export default function KanbanBoardWrapper({
   project,
   boardId,
+  boardTitle,
+  teamTitle,
   columns,
 }: {
   project: any;
   boardId: string;
+  boardTitle: string;
+  teamTitle: string | null;
   columns: any[];
 }) {
+  const resolvedTeamTitle = teamTitle ?? project.team?.name ?? project.title ?? 'Team';
+  const boardPath = `${resolvedTeamTitle}/${project.title ?? 'Project'}/${boardTitle ?? 'Board'}`;
+
   const uiColumns: Column[] = columns.map((c: any) => ({
     id: c.id,
     title: c.title,
@@ -74,7 +94,25 @@ export default function KanbanBoardWrapper({
       id: t.id,
       title: t.title,
       order: t.order,
-      displayId: `${project.number}-${t.projectTaskNumber}`,
+      displayId: `${project.number ?? ''}-${t.projectTaskNumber}`,
+      ownerName: t.creator?.name ?? null,
+      ownerEmail: t.creator?.email ?? null,
+      ownerImage: t.creator?.image ?? null,
+      members: (t.assignees ?? []).map((a: any) => ({
+        id: a.user?.id,
+        name: a.user?.name,
+        email: a.user?.email,
+        image: a.user?.image,
+      })),
+      path: boardPath,
+      comments: (t.comments ?? []).map((c: any) => ({
+        id: c.id,
+        content: c.content,
+        createdAt: c.createdAt,
+        authorName: c.author?.name ?? null,
+        authorEmail: c.author?.email ?? null,
+        authorImage: c.author?.image ?? null,
+      })),
     })),
   }));
 
