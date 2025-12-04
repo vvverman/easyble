@@ -71,12 +71,12 @@ export function TeamSwitcher({ teams }: { teams: Team[] }) {
     )
   }
 
-  const currentTeamId = searchParams.get("team")
+  const currentTeamId = searchParams?.get("team")
   const activeTeam =
     teams.find((t) => t.id === currentTeamId) ?? teams[0]
 
   const setTeam = (teamId: string) => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams?.toString() ?? "")
     params.set("team", teamId)
     router.push(`${pathname}?${params.toString()}`)
   }

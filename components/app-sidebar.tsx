@@ -86,7 +86,7 @@ function AppSidebarInner({
 }: AppSidebarProps) {
   const { toggleSidebar, state } = useSidebar()
   const searchParams = useSearchParams()
-  const teamFromUrl = searchParams.get("team") || undefined
+  const teamFromUrl = searchParams?.get("team") || undefined
 
   const defaultTeamId = teams[0]?.id
   const currentTeamId = teamFromUrl ?? defaultTeamId

@@ -22,6 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../../../components/
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/animate-ui/components/base/switch';
 import { cn } from '@/lib/utils';
+import { ChevronDown } from 'lucide-react';
 
 const MAX_TITLE_LENGTH = 250;
 
@@ -30,6 +31,7 @@ type Card = {
   title: string;
   order: number;
   displayId: string;
+  columnId?: string;
   ownerName?: string | null;
   ownerEmail?: string | null;
   ownerImage?: string | null;
@@ -54,9 +56,12 @@ type Card = {
 
 type CardProps = {
   card: Card;
+  statusOptions?: { id: string; title: string }[];
+  onChangeStatus?: (cardId: string, nextColumnId: string) => void;
   onDeleteCard: (cardId: string) => void;
   onUpdateCardTitle: (cardId: string, title: string) => void;
   onCompleteCard: (cardId: string) => void;
+  columnId?: string;
 };
 
 type TaskType = 'task' | 'meeting' | 'call';
@@ -81,8 +86,24 @@ function formatTimeValue(date: Date) {
   const m = date.getMinutes().toString().padStart(2, '0');
   return `${h}:${m}`;
 }
+export function KanbanCard({
+  card,
+  statusOptions,
+  onChangeStatus,
+  onDeleteCard,
+  onUpdateCardTitle,
+  onCompleteCard,
+  columnId,
+}: CardProps) {
+  const fallbackStatuses = [
+    { id: 'open', title: 'Открыто' },
+    { id: 'in_progress', title: 'В работе' },
+    { id: 'done', title: 'Выполнено' },
+    { id: 'closed', title: 'Закрыто' },
+  ];
+  const availableStatuses = statusOptions && statusOptions.length > 0 ? statusOptions : fallbackStatuses;
+  const defaultStatusId = columnId ?? card.columnId ?? availableStatuses[0]?.id ?? 'open';
 
-export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCard }: CardProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(card.title);
   const [description, setDescription] = useState('');
@@ -112,13 +133,18 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(card.completed ?? false);
+  const [status, setStatus] = useState<string>(defaultStatusId);
+  const isCompleted = useMemo(() => {
+    const label =
+      availableStatuses.find((opt) => opt.id === status)?.title.toLowerCase() ?? '';
+    return label.includes('done') || label.includes('выполн');
+  }, [availableStatuses, status]);
 
   useEffect(() => {
     setDraftTitle(card.title);
     setIsEditingTitle(false);
-    setIsCompleted(card.completed ?? false);
-  }, [card.title]);
+    setStatus(columnId ?? card.columnId ?? availableStatuses[0]?.id ?? 'open');
+  }, [card.title, card.completed, card.columnId, columnId, availableStatuses]);
 
   const initials = useMemo(() => {
     const src = card.title || card.displayId;
@@ -202,11 +228,16 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
     setComment('');
   }
 
-  function handleCompleteClick() {
-    onCompleteCard(card.id);
-    setIsRunning(false);
-    setIsCompleted(true);
-    appendHistory('Пометил как выполнено');
+  function updateStatus(next: string) {
+    setStatus(next);
+    const label = availableStatuses.find((o) => o.id === next)?.title ?? next;
+    appendHistory(`Изменил статус на «${label}»`);
+    if (label.toLowerCase().includes('done') || label.toLowerCase().includes('выполн')) {
+      setIsRunning(false);
+    }
+    if (next !== columnId && next !== card.columnId) {
+      onChangeStatus?.(card.id, next);
+    }
   }
 
   function handleStartPause() {
@@ -272,31 +303,40 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
                 <div className="space-y-5">
                   {/* Кнопки / статус */}
                   <div className="flex items-center gap-3">
-                    {isCompleted ? (
-                      <span className="text-xs font-semibold text-emerald-500">
-                        Статус: выполнена
-                      </span>
-                    ) : (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-4"
-                          type="button"
-                          onClick={handleCompleteClick}
-                        >
-                          Выполнить
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8 px-4 gap-2">
+                          <span>
+                            Статус:{' '}
+                            {availableStatuses.find((o) => o.id === status)?.title ?? '—'}
+                          </span>
+                          <ChevronDown className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          className="h-8 px-4"
-                          type="button"
-                          onClick={handleStartPause}
-                        >
-                          {isRunning ? 'Пауза' : 'Старт'}
-                        </Button>
-                      </>
-                    )}
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-44">
+                        {availableStatuses.map((option) => (
+                          <DropdownMenuItem
+                            key={option.id}
+                            className={cn('gap-2 capitalize', status === option.id && 'font-semibold')}
+                            onClick={() => {
+                              updateStatus(option.id);
+                            }}
+                          >
+                            {option.title}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Button
+                      size="sm"
+                      className="h-8 px-4"
+                      type="button"
+                      onClick={handleStartPause}
+                      disabled={isCompleted}
+                    >
+                      {isRunning ? 'Пауза' : 'Старт'}
+                    </Button>
                   </div>
 
                   {/* Заголовок */}
@@ -625,7 +665,7 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
         setIsEditingTitle(false);
         setIsSheetOpen(true);
         setIsRunning(false);
-        setIsCompleted(card.completed ?? isCompleted);
+        setStatus(card.completed ? 'done' : 'open');
       }}
       className="space-y-2"
     >
@@ -644,29 +684,20 @@ export function KanbanCard({ card, onDeleteCard, onUpdateCardTitle, onCompleteCa
               tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
-                setIsCompleted((prev) => {
-                  const next = !prev;
-                  if (next) {
-                    appendHistory('Пометил как выполнено');
-                  } else {
-                    appendHistory('Вернул в работу');
-                  }
-                  return next;
-                });
+                const doneOption = availableStatuses.find((o) =>
+                  o.title.toLowerCase().includes('done') || o.title.toLowerCase().includes('выполн'),
+                );
+                const defaultOption = availableStatuses[0];
+                const nextStatus = isCompleted
+                  ? defaultOption?.id ?? status
+                  : doneOption?.id ?? status;
+                updateStatus(nextStatus);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   e.stopPropagation();
-                  setIsCompleted((prev) => {
-                    const next = !prev;
-                    if (next) {
-                      appendHistory('Пометил как выполнено');
-                    } else {
-                      appendHistory('Вернул в работу');
-                    }
-                    return next;
-                  });
+                  updateStatus(isCompleted ? 'open' : 'done');
                 }
               }}
               className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] transition-colors ${

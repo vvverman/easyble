@@ -40,6 +40,7 @@ type Card = {
   title: string;
   order: number;
   displayId: string;
+  columnId?: string;
   ownerName?: string | null;
   ownerEmail?: string | null;
   ownerImage?: string | null;
@@ -68,6 +69,7 @@ type BoardProps = {
   projectId: string;
   boardId: string;
   initialColumns: Column[];
+  onOpenEasyble?: () => void;
 };
 
 export default function KanbanBoardWrapper({
@@ -76,12 +78,14 @@ export default function KanbanBoardWrapper({
   boardTitle,
   teamTitle,
   columns,
+  onOpenEasyble,
 }: {
   project: any;
   boardId: string;
   boardTitle: string;
   teamTitle: string | null;
   columns: any[];
+  onOpenEasyble?: () => void;
 }) {
   const resolvedTeamTitle = teamTitle ?? project.team?.name ?? project.title ?? 'Team';
   const boardPath = `${resolvedTeamTitle}/${project.title ?? 'Project'}/${boardTitle ?? 'Board'}`;
@@ -96,6 +100,7 @@ export default function KanbanBoardWrapper({
       title: t.title,
       order: t.order,
       displayId: `${project.number ?? ''}-${t.projectTaskNumber}`,
+      columnId: c.id,
       ownerName: t.creator?.name ?? null,
       ownerEmail: t.creator?.email ?? null,
       ownerImage: t.creator?.image ?? null,
@@ -124,12 +129,13 @@ export default function KanbanBoardWrapper({
         projectId={project.id}
         boardId={boardId}
         initialColumns={uiColumns}
+        onOpenEasyble={onOpenEasyble}
       />
     </KanbanBoardProvider>
   );
 }
 
-function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) {
+function ProjectKanbanBoard({ projectId, boardId, initialColumns, onOpenEasyble }: BoardProps) {
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [isPending, startTransition] = useTransition();
   const scrollContainerReference = useRef<HTMLDivElement | null>(null);
@@ -198,9 +204,10 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
       previousColumns.map((column: Column) => {
         if (column.id === columnId) {
           const otherItems = column.items.filter(({ id }) => id !== card.id);
+          const movedCard = { ...card, columnId };
           return {
             ...column,
-            items: [...otherItems.slice(0, index), card, ...otherItems.slice(index)],
+            items: [...otherItems.slice(0, index), movedCard, ...otherItems.slice(index)],
           };
         } else {
           return {
@@ -242,6 +249,7 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
           <KanbanColumn
             key={column.id}
             column={column}
+            statusOptions={columns.map((c) => ({ id: c.id, title: c.title }))}
             onAddCard={handleAddCard}
             onDeleteCard={handleDeleteCard}
             onDeleteColumn={handleDeleteColumn}
@@ -251,6 +259,7 @@ function ProjectKanbanBoard({ projectId, boardId, initialColumns }: BoardProps) 
             onCompleteCard={handleCompleteCard}
             onDragCancel={handleDragCancel}
             onDragEnd={handleDragEnd}
+            onOpenEasyble={onOpenEasyble}
           />
         ) : (
           <KanbanBoardColumnSkeleton key={column.id} />

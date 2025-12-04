@@ -71,6 +71,7 @@ const ICON_MAP = {
 const TEAM_ICONS = [GalleryVerticalEnd, AudioWaveform, Command]
 
 function resolveTitle(pathname: string, projects: Project[]): string {
+  if (pathname === "/projects/my-tasks") return "Мои задачи"
   if (pathname === "/projects/new") return "New project"
   if (pathname.endsWith("/boards/new")) return "New board"
   if (pathname === "/projects") return "Projects"
@@ -127,7 +128,7 @@ export function WorkspaceTabs({ projects = [], teams = [] }: WorkspaceTabsProps)
   const [tabs, setTabs] = useState<Tab[]>([])
   const prevPathRef = useRef<string | null>(null)
 
-  const teamFromUrl = searchParams.get("team") || undefined
+  const teamFromUrl = searchParams?.get("team") || undefined
   const defaultTeamId = teams[0]?.id
   const currentTeamId = teamFromUrl ?? defaultTeamId
 

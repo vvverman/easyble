@@ -8,7 +8,7 @@ import { authClient } from "@/lib/auth-client"
 export function OtpForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const email = searchParams.get("email") || ""
+  const email = searchParams?.get("email") || ""
   const length = 6
   const [digits, setDigits] = useState<string[]>(Array(length).fill(""))
   const [error, setError] = useState<string | null>(null)

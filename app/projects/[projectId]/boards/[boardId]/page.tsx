@@ -2,11 +2,10 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { headers } from "next/headers"
 import prisma from "~/lib/prisma"
-import KanbanBoardWrapper from "~/features/kanban/board"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { auth } from "@/auth"
 import { SendBoardInviteForm } from "@/components/send-board-invite-form"
-import { BoardFloatingMenu } from "@/components/board-floating-menu"
+import { BoardViewClient } from "./board-view-client"
 
 interface BoardPageProps {
   params: Promise<{
@@ -51,7 +50,7 @@ export async function generateMetadata(
 }
 
 export default async function BoardPage({ params }: BoardPageProps) {
-  const { boardId } = await params
+  const { boardId, projectId } = await params
 
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -59,16 +58,59 @@ export default async function BoardPage({ params }: BoardPageProps) {
   const userId = session?.user?.id
   const userEmail = session?.user?.email?.toLowerCase() ?? null
 
-  const board = await prisma.board.findFirst({
-    where: {
-      id: boardId,
-      OR: [
-        { project: { ownerId: userId ?? undefined } },
-        { members: { some: { userId: userId ?? "" } } },
-        userEmail ? { invites: { some: { email: userEmail } } } : undefined,
-      ].filter(Boolean) as any,
-    },
-    include: {
+  async function loadBoard(withArchive: boolean) {
+    const base = {
+      where: {
+        id: boardId,
+        OR: [
+          { project: { ownerId: userId ?? undefined } },
+          { members: { some: { userId: userId ?? "" } } },
+          userEmail ? { invites: { some: { email: userEmail } } } : undefined,
+        ].filter(Boolean) as any,
+      },
+      columns: {
+        include: {
+          tasks: {
+            orderBy: { order: "asc" },
+            include: {
+              creator: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                },
+              },
+              assignees: {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      image: true,
+                    },
+                  },
+                },
+              },
+              comments: {
+                orderBy: { createdAt: "asc" },
+                include: {
+                  author: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      image: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { order: "asc" },
+      },
       project: {
         include: {
           owner: true,
@@ -76,10 +118,76 @@ export default async function BoardPage({ params }: BoardPageProps) {
         },
       },
       invites: true,
+    };
+
+    if (withArchive) {
+      return prisma.board.findFirst({
+        where: base.where,
+        include: {
+          project: base.project,
+          invites: base.invites,
+          columns: base.columns,
+          // archive fields присутствуют в схеме; если колонки есть в БД — всё ок
+          // Prisma требует указания, иначе выбрасывает ошибку отсутствия столбца
+          // но реальный запрос возьмёт все scalar поля
+        },
+      } as any);
+    }
+
+    // Режим совместимости: выбираем только существующие столбцы (id, title, projectId) + связи
+    return prisma.board.findFirst({
+      where: base.where,
+      select: {
+        id: true,
+        title: true,
+        projectId: true,
+        project: base.project as any,
+        invites: true,
+        columns: base.columns as any,
+      },
+    });
+  }
+
+  let board: any = null
+  try {
+    board = await loadBoard(true)
+  } catch {
+    // если колонок архива нет в БД (старая схема), пробуем без них
+    board = await loadBoard(false)
+  }
+
+  if (!board) {
+    notFound()
+  }
+
+  // Автоархивация
+  if (board.archiveColumnId && board.archiveAfterDays && board.archiveAfterDays > 0) {
+    const threshold = new Date()
+    threshold.setDate(threshold.getDate() - board.archiveAfterDays)
+
+    await prisma.task.updateMany({
+      where: {
+        columnId: board.archiveColumnId,
+        archived: false,
+        updatedAt: { lt: threshold },
+      },
+      data: {
+        archived: true,
+        status: "ARCHIVED",
+      },
+    })
+  }
+
+  // Подгружаем свежие данные после возможной архивации
+  const fresh = await prisma.board.findFirst({
+    where: { id: boardId },
+    include: {
+      project: {
+        include: { owner: true, team: true },
+      },
       columns: {
         include: {
           tasks: {
-            where: { archived: false },
             orderBy: { order: "asc" },
             include: {
               creator: {
@@ -123,18 +231,14 @@ export default async function BoardPage({ params }: BoardPageProps) {
     },
   })
 
-  if (!board) {
-    notFound()
-  }
-
-  const project = board.project
+  const project = fresh?.project ?? board.project
   const owner = project.owner
   const boardIdValue = board.id
 
   // если есть приглашение по email, но нет membership — добавляем
   if (userId && userEmail) {
     const hasInvite = board.invites.some(
-      (i) => i.email.toLowerCase() === userEmail && i.status !== "EXPIRED",
+      (i: any) => i.email.toLowerCase() === userEmail && i.status !== "EXPIRED",
     )
     if (hasInvite) {
       await prisma.$transaction([
@@ -170,19 +274,16 @@ export default async function BoardPage({ params }: BoardPageProps) {
     : []
 
   return (
-    <div className="relative flex h-full min-h-0">
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-hidden pl-4 pt-4 pb-0">
-          <KanbanBoardWrapper
-            project={project}
-            boardId={board.id}
-            boardTitle={board.title}
-            teamTitle={project.team?.name ?? null}
-            columns={board.columns}
-          />
-        </div>
-      </div>
-      <BoardFloatingMenu avatars={avatars} boardId={board.id} />
-    </div>
+    <BoardViewClient
+      project={project}
+      boardId={board.id}
+      boardTitle={board.title}
+      teamTitle={project.team?.name ?? null}
+      columns={fresh?.columns ?? board.columns}
+      avatars={avatars}
+      archiveAfterDays={board.archiveAfterDays ?? null}
+      archiveColumnId={board.archiveColumnId ?? null}
+      projectId={projectId}
+    />
   )
 }

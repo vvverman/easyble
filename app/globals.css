@@ -236,3 +236,107 @@
   padding-bottom: 0 !important;
   margin-bottom: 0 !important;
 }
+
+/* Linkify landing helpers */
+@keyframes border-beam {
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes image-glow {
+  from {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 0.35;
+  }
+}
+
+@keyframes flip {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(360deg);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-border-beam {
+  animation: border-beam var(--duration, 12s) linear infinite;
+}
+
+.animate-image-glow {
+  animation: image-glow 6s ease-in-out infinite;
+}
+
+.animate-flip {
+  animation: flip 8s linear infinite;
+}
+
+.animate-rotate {
+  animation: rotate 6s linear infinite;
+}
+
+.mask-gradient {
+  mask-image: linear-gradient(white, transparent);
+}
+
+/* Linkify gradient helper */
+.gradient {
+  background: conic-gradient(
+    from 230.29deg at 51.63% 52.16%,
+    rgb(36, 0, 255) 0deg,
+    rgb(0, 135, 255) 67.5deg,
+    rgb(108, 39, 157) 198.75deg,
+    rgb(24, 38, 163) 251.25deg,
+    rgb(54, 103, 196) 301.88deg,
+    rgb(105, 30, 255) 360deg
+  );
+}
+
+/* Linkify hero grid + vignette */
+.hero-grid {
+  position: relative;
+  isolation: isolate;
+  background-color: transparent;
+}
+
+.hero-grid::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  background-image: none;
+  background-size: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 40% at 50% 40%, rgba(96,56,255,0.12), transparent 55%),
+              radial-gradient(55% 40% at 50% 60%, rgba(255,109,191,0.08), transparent 60%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-grid > * {
+  position: relative;
+  z-index: 1;
+}

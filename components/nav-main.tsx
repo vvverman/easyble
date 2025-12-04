@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ChevronRight, MoreHorizontal, Plus, type LucideIcon } from "lucide-react"
+import { ChevronRight, MoreHorizontal, Plus, type LucideIcon, Inbox, Send, Users, Calendar } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useWorkspaceTabs } from "@/lib/workspace-tabs-store"
 
@@ -127,8 +127,45 @@ export function NavMain({
     ? `/projects/new?team=${currentTeamId}`
     : "/projects/new"
 
+  const shortcuts = [
+    { title: "Мои задачи", icon: Inbox, href: "/projects/my-tasks" },
+    { title: "Календарь", icon: Calendar, href: "/calendar" },
+  ]
+
   return (
     <>
+      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+        <SidebarGroupLabel>Личное</SidebarGroupLabel>
+        <SidebarMenu>
+          {shortcuts.map((item) => {
+            const isOpenTab = openTabs.some((t) => stripQuery(t.href) === item.href)
+            const isActive = stripQuery(pathname) === stripQuery(item.href)
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  className="font-medium text-sidebar-foreground gap-2"
+                >
+                  <button
+                    type="button"
+                    className="flex items-center gap-2"
+                    onClick={() => router.push(item.href ?? "/")}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span className="flex items-center gap-2">
+                      {item.title}
+                      {(isOpenTab || isActive) && (
+                        <span className="inline-flex h-2 w-2 flex-shrink-0 rounded-full bg-sky-400" />
+                      )}
+                    </span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
+        </SidebarMenu>
+      </SidebarGroup>
+
       <SidebarGroup>
         <SidebarGroupLabel>Projects</SidebarGroupLabel>
         <SidebarGroupAction
@@ -228,11 +265,11 @@ export function NavMain({
                                     href={subItem.url}
                                     className="flex min-w-0 flex-1 items-center text-xs text-foreground"
                                   >
-                                    <span className="truncate flex items-center gap-1">
-                                      {isActiveBoard && (
-                                        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-                                      )}
+                                    <span className="truncate flex items-center gap-2">
                                       {subItem.title}
+                                      {isActiveBoard && (
+                                        <span className="inline-flex h-2 w-2 flex-shrink-0 rounded-full bg-sky-400" />
+                                      )}
                                     </span>
                                   </Link>
                                   {pId && boardId && (

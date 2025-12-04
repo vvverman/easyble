@@ -4,6 +4,29 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import prisma from '~/lib/prisma';
 
+export async function updateBoardArchiveSettings(
+  boardId: string,
+  archiveColumnId: string,
+  archiveAfterDays: number,
+  projectId?: string,
+) {
+  if (!boardId) return;
+
+  await prisma.board.update({
+    where: { id: boardId },
+    data: {
+      archiveColumnId,
+      archiveAfterDays,
+    },
+  });
+
+  if (projectId) {
+    revalidatePath(`/projects/${projectId}/boards/${boardId}`);
+  } else {
+    revalidatePath(`/projects/${boardId}`);
+  }
+}
+
 export async function createBoard(formData: FormData) {
   const title = (formData.get('title') as string | null)?.trim();
   const projectId = formData.get('projectId') as string;
@@ -27,15 +50,31 @@ export async function createBoard(formData: FormData) {
       projectId: projectId,
       columns: {
         create: [
-          { title: 'To Do', color: 'blue', order: 0 },
-          { title: 'In Progress', color: 'yellow', order: 1 },
-          { title: 'Done', color: 'green', order: 2 },
+          { title: 'New', color: 'blue', order: 0 },
+          { title: 'In Job', color: 'yellow', order: 1 },
+          { title: 'Review', color: 'orange', order: 2 },
+          { title: 'Done', color: 'green', order: 3 },
         ],
       },
     },
   });
 
   redirect(`/projects/${projectId}/boards/${board.id}`);
+}
+
+// Форма для сохранения настроек архивации (используется из шита на борде)
+export async function saveBoardArchiveSettingsForm(formData: FormData) {
+  'use server';
+
+  const boardId = (formData.get('boardId') as string | null) ?? '';
+  const projectId = (formData.get('projectId') as string | null) ?? undefined;
+  const archiveColumnId = (formData.get('archiveColumnId') as string | null) ?? '';
+  const daysRaw = (formData.get('archiveAfterDays') as string | null) ?? '30';
+  const archiveAfterDays = Math.max(1, parseInt(daysRaw, 10) || 30);
+
+  if (!boardId || !archiveColumnId) return;
+
+  await updateBoardArchiveSettings(boardId, archiveColumnId, archiveAfterDays, projectId);
 }
 
 // Обновление названия борда

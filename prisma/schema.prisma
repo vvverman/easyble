@@ -64,6 +64,8 @@ model Board {
   columns   Column[]
   members   BoardMember[]
   invites   BoardInvite[]
+  archiveColumnId String?
+  archiveAfterDays Int?
   createdAt DateTime @default(now())
 
   @@index([projectId])
@@ -179,6 +181,7 @@ enum TaskStatus {
   TODO
   IN_PROGRESS
   DONE
+  ARCHIVED
 }
 
 enum TaskKind {

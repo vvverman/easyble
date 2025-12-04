@@ -2,6 +2,7 @@
 
 import { MoreHorizontalIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
+import Image from 'next/image';
 import type { KanbanBoardDropDirection } from '@/new-york/ui/kanban';
 import {
   KanbanBoardColumn,
@@ -42,6 +43,7 @@ type Card = {
   title: string;
   order: number;
   displayId: string;
+  columnId?: string;
   ownerName?: string | null;
   ownerEmail?: string | null;
   ownerImage?: string | null;
@@ -68,6 +70,7 @@ type Column = {
 
 type ColumnProps = {
   column: Column;
+  statusOptions: { id: string; title: string }[];
   onAddCard: (columnId: string, content: string) => void;
   onDeleteCard: (cardId: string) => void;
   onDeleteColumn: (columnId: string) => void;
@@ -77,10 +80,12 @@ type ColumnProps = {
   onCompleteCard: (cardId: string) => void;
   onDragCancel: (cardId: string) => void;
   onDragEnd: (cardId: string, overId: string) => void;
+  onOpenEasyble?: () => void;
 };
 
 export function KanbanColumn({
   column,
+  statusOptions,
   onAddCard,
   onDeleteCard,
   onDeleteColumn,
@@ -90,6 +95,7 @@ export function KanbanColumn({
   onCompleteCard,
   onDragCancel,
   onDragEnd,
+  onOpenEasyble,
 }: ColumnProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState(false);
@@ -172,6 +178,16 @@ export function KanbanColumn({
               <KanbanBoardColumnIconButton onClick={() => setIsAddingCard(true)}>
                 <PlusIcon />
               </KanbanBoardColumnIconButton>
+              <KanbanBoardColumnIconButton title="Easyble" onClick={() => onOpenEasyble?.()}>
+                <Image
+                  src="/images/icon-easyble-24-white.svg"
+                  alt="Easyble"
+                  width={16}
+                  height={16}
+                  className="opacity-80"
+                  priority
+                />
+              </KanbanBoardColumnIconButton>
             </div>
           </>
         )}
@@ -199,6 +215,12 @@ export function KanbanColumn({
               >
                 <KanbanCard
                   card={card}
+                  columnId={column.id}
+                  statusOptions={statusOptions}
+                  onChangeStatus={(cardId, nextColumnId) => {
+                    if (!nextColumnId || nextColumnId === column.id) return;
+                    onMoveCardToColumn(nextColumnId, 0, { ...card, id: cardId, columnId: nextColumnId });
+                  }}
                   onDeleteCard={onDeleteCard}
                   onUpdateCardTitle={onUpdateCardTitle}
                   onCompleteCard={onCompleteCard}
