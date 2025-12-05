@@ -78,66 +78,66 @@ export const FEATURES = [
 
 export const REVIEWS = [
     {
-        name: "Michael Smith",
-        username: "@michaelsmith",
-        avatar: "https://randomuser.me/api/portraits/men/1.jpg",
+        name: "Mark Ivanov",
+        username: "Flowline (Product Lead)",
+        avatar: "https://randomuser.me/api/portraits/men/11.jpg",
         rating: 5,
-        review: "This tool is a lifesaver! Managing and tracking my links has never been easier. A must-have for anyone dealing with numerous links."
+        review: "Мы начали озвучивать идеи прямо на летучках — Easyble сразу превращает речь в задачи. Команда видит их в бэклоге через минуту, ни одной потерянной инициативы за квартал."
     },
     {
-        name: "Emily Johnson",
-        username: "@emilyjohnson",
-        avatar: "https://randomuser.me/api/portraits/women/1.jpg",
+        name: "Anna Petrova",
+        username: "Nimbus Support (Head of CS)",
+        avatar: "https://randomuser.me/api/portraits/women/21.jpg",
+        rating: 5,
+        review: "Подключили поддержку: операторы диктуют проблемы клиентов, Easyble сам расставляет теги и дедлайны. SLA по колонкам — теперь тишина в почте и чёткие сроки."
+    },
+    {
+        name: "Alex Carter",
+        username: "Craftable (Founder)",
+        avatar: "https://randomuser.me/api/portraits/men/31.jpg",
         rating: 4,
-        review: "Very useful app! It has streamlined my workflow considerably. A few minor bugs, but overall a great experience."
+        review: "Голосом описываю фичу — через пару секунд у нас карточка с чек-листом и автоназначением. Экспорт в webhook кормит CI, меньше ручных этапов."
     },
     {
-        name: "Daniel Williams",
-        username: "@danielwilliams",
-        avatar: "https://randomuser.me/api/portraits/men/2.jpg",
+        name: "Victor Levin",
+        username: "CargoFox (Ops)",
+        avatar: "https://randomuser.me/api/portraits/men/41.jpg",
         rating: 5,
-        review: "I've been using this app daily for months. The insights and analytics it provides are invaluable. Highly recommend it!"
+        review: "Диспетчеры диктуют с дороги, Easyble сам понимает колонку и сроки. Архивирование по правилам — старые заявки не засоряют борды."
     },
     {
-        name: "Sophia Brown",
-        username: "@sophiabrown",
-        avatar: "https://randomuser.me/api/portraits/women/2.jpg",
+        name: "Maria Novak",
+        username: "PeopleFirst (HRD)",
+        avatar: "https://randomuser.me/api/portraits/women/25.jpg",
         rating: 4,
-        review: "This app is fantastic! It offers everything I need to manage my links efficiently."
+        review: "Мы диктуем заметки с собеседований, Easyble собирает их в один список и раскладывает по колонкам. Экономим время на протоколах."
     },
     {
-        name: "James Taylor",
-        username: "@jamestaylor",
-        avatar: "https://randomuser.me/api/portraits/men/3.jpg",
+        name: "Daniel Kim",
+        username: "BrightDrive (Delivery Lead)",
+        avatar: "https://randomuser.me/api/portraits/men/51.jpg",
         rating: 5,
-        review: "Absolutely love this app! It's intuitive and feature-rich. Has significantly improved how I manage and track links."
+        review: "Раньше записывал в Telegram, теперь говорю в Easyble — задачи появляются в нужной колонке, команда получает напоминания. Скорость закрытия выросла."
     },
     {
-        name: "Olivia Martinez",
-        username: "@oliviamartinez",
-        avatar: "https://randomuser.me/api/portraits/women/3.jpg",
+        name: "Elena Brooks",
+        username: "Healthly (COO)",
+        avatar: "https://randomuser.me/api/portraits/women/45.jpg",
+        rating: 5,
+        review: "AI-резюме и теги помогают мгновенно понять суть. Внутренние созвоны стали короче — задачи уже структурированы к концу встречи."
+    },
+    {
+        name: "Pavel Orlov",
+        username: "FinEdge (CTO)",
+        avatar: "https://randomuser.me/api/portraits/men/61.jpg",
         rating: 4,
-        review: "Great app with a lot of potential. It has already saved me a lot of time. Looking forward to future updates and improvements."
+        review: "Подружили Easyble с вебхуками — задачи уходят в git-борд. Автоназначение по ключевым словам снимает рутину с тимлидов."
     },
     {
-        name: "William Garcia",
-        username: "@williamgarcia",
-        avatar: "https://randomuser.me/api/portraits/men/4.jpg",
+        name: "Nadia Collins",
+        username: "StudioNorth (PM)",
+        avatar: "https://randomuser.me/api/portraits/women/55.jpg",
         rating: 5,
-        review: "This app is a game-changer for link management. It's easy to use, extremely powerful and highly recommended!"
-    },
-    {
-        name: "Mia Rodriguez",
-        username: "@miarodriguez",
-        avatar: "https://randomuser.me/api/portraits/women/4.jpg",
-        rating: 4,
-        review: "I've tried several link management tools, but this one stands out. It's simple, effective."
-    },
-    {
-        name: "Henry Lee",
-        username: "@henrylee",
-        avatar: "https://randomuser.me/api/portraits/men/5.jpg",
-        rating: 5,
-        review: "This app has transformed my workflow. Managing and analyzing links is now a breeze. I can't imagine working without it."
+        review: "Я диктую backlog по пути в офис, Easyble разбрасывает задачи по колонкам и ставит дедлайны. Команда просыпается уже с готовым планом."
     },
 ] as const;

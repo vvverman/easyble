@@ -1,6 +1,5 @@
 "use client";
 
-import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -9,7 +8,7 @@ import { PLANS } from "@/app/features/linkify/utils/constants/pricing";
 import { motion } from "framer-motion";
 import { CheckCircleIcon } from "lucide-react";
 import Link from "next/link";
-import { useState } from 'react';
+import { useState } from "react";
 
 type Tab = "monthly" | "yearly";
 
@@ -21,11 +20,11 @@ const PricingCards = () => {
 
     return (
         <Tabs defaultValue="monthly" className="w-full flex flex-col items-center justify-center">
-            <TabsList>
+            <TabsList className="bg-transparent">
                 <MotionTabTrigger
                     value="monthly"
                     onClick={() => setActiveTab("monthly")}
-                    className="relative"
+                    className="relative px-4 py-2 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
                 >
                     {activeTab === "monthly" && (
                         <motion.div
@@ -34,7 +33,7 @@ const PricingCards = () => {
                                 type: "spring",
                                 bounce: 0.5,
                             }}
-                            className="absolute top-0 left-0 w-full h-full bg-background shadow-sm rounded-md z-10"
+                            className="absolute top-0 left-0 w-full h-full bg-white/5 rounded-md z-10 border border-white/10"
                         />
                     )}
                     <span className="z-20">
@@ -44,7 +43,7 @@ const PricingCards = () => {
                 <MotionTabTrigger
                     value="yearly"
                     onClick={() => setActiveTab("yearly")}
-                    className="relative"
+                    className="relative px-4 py-2 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
                 >
                     {activeTab === "yearly" && (
                         <motion.div
@@ -53,7 +52,7 @@ const PricingCards = () => {
                                 type: "spring",
                                 bounce: 0.5,
                             }}
-                            className="absolute top-0 left-0 w-full h-full bg-background shadow-sm rounded-md z-10"
+                            className="absolute top-0 left-0 w-full h-full bg-white/5 rounded-md z-10 border border-white/10"
                         />
                     )}
                     <span className="z-20">
@@ -62,40 +61,42 @@ const PricingCards = () => {
                 </MotionTabTrigger>
             </TabsList>
 
-            <TabsContent value="monthly" className="grid grid-cols-1 lg:grid-cols-3 gap-5 w-full md:gap-8 flex-wrap max-w-5xl mx-auto pt-6">
+            <TabsContent value="monthly" className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full flex-wrap max-w-6xl mx-auto pt-6 border-0">
                 {PLANS.map((plan) => (
                     <Card
                         key={plan.name}
                         className={cn(
-                            "flex flex-col w-full border-border rounded-xl",
+                            "flex flex-col w-full rounded-2xl border border-white/10 bg-[#0f0f0f] text-foreground shadow-[0_20px_60px_-40px_rgba(0,0,0,0.8)] overflow-hidden py-0 gap-0",
                             plan.name === "Pro" && "border-2 border-purple-500"
                         )}
                     >
-                        <CardHeader className={cn(
-                            "border-b border-border",
-                            plan.name === "Pro" ? "bg-purple-500/[0.07]" : "bg-foreground/[0.03]"
-                        )}>
-                            <CardTitle className={cn(plan.name !== "Pro" && "text-muted-foreground", "text-lg font-medium")}>
+                        <CardHeader
+                            className={cn(
+                                "border-b border-white/10 rounded-t-2xl pt-6",
+                                plan.name === "Pro" ? "bg-[#1a0f2b]" : "bg-[#111]"
+                            )}
+                        >
+                            <CardTitle className={cn(plan.name !== "Pro" && "text-neutral-200", "text-lg font-medium")}>
                                 {plan.name}
                             </CardTitle>
-                            <CardDescription>
+                            <CardDescription className="text-sm text-muted-foreground">
                                 {plan.info}
                             </CardDescription>
-                            <h5 className="text-3xl font-semibold">
+                            <h5 className="text-4xl font-semibold">
                                 ${plan.price.monthly}
                                 <span className="text-base text-muted-foreground font-normal">
                                     {plan.name !== "Free" ? "/month" : ""}
                                 </span>
                             </h5>
                         </CardHeader>
-                        <CardContent className="pt-6 space-y-4">
+                        <CardContent className="pt-4 pb-6 space-y-4 text-sm">
                             {plan.features.map((feature, index) => (
                                 <div key={index} className="flex items-center gap-2">
                                     <CheckCircleIcon className="text-purple-500 w-4 h-4" />
                                     <TooltipProvider>
                                         <Tooltip delayDuration={0}>
                                             <TooltipTrigger asChild>
-                                                <p className={cn(feature.tooltip && "border-b !border-dashed border-border cursor-pointer")}>
+                                                <p className={cn(feature.tooltip && "border-b !border-dashed border-white/20 cursor-pointer")}>
                                                     {feature.text}
                                                 </p>
                                             </TooltipTrigger>
@@ -109,11 +110,14 @@ const PricingCards = () => {
                                 </div>
                             ))}
                         </CardContent>
-                        <CardFooter className="w-full mt-auto">
+                        <CardFooter className="w-full mt-auto px-6 pb-6 pt-0">
                             <Link
                                 href={plan.btn.href}
                                 style={{ width: "100%" }}
-                                className={buttonVariants({ className: plan.name === "Pro" && "bg-purple-500 hover:bg-purple-500/80 text-white" })}
+                                className={cn(
+                                    "h-12 rounded-lg text-base font-semibold border border-white/10 bg-white text-neutral-900 transition hover:bg-white/90 flex items-center justify-center",
+                                    plan.name === "Pro" && "bg-purple-500 hover:bg-purple-500/90 text-white border-purple-500"
+                                )}
                             >
                                 {plan.btn.text}
                             </Link>
@@ -121,26 +125,28 @@ const PricingCards = () => {
                     </Card>
                 ))}
             </TabsContent>
-            <TabsContent value="yearly" className="grid grid-cols-1 lg:grid-cols-3 gap-5 w-full md:gap-8 flex-wrap max-w-5xl mx-auto pt-6">
+            <TabsContent value="yearly" className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full flex-wrap max-w-6xl mx-auto pt-6 border-0">
                 {PLANS.map((plan) => (
                     <Card
                         key={plan.name}
                         className={cn(
-                            "flex flex-col w-full border-border rounded-xl",
+                            "flex flex-col w-full rounded-2xl border border-white/10 bg-[#0f0f0f] text-foreground shadow-[0_20px_60px_-40px_rgba(0,0,0,0.8)] overflow-hidden py-0 gap-0",
                             plan.name === "Pro" && "border-2 border-purple-500"
                         )}
                     >
-                        <CardHeader className={cn(
-                            "border-b border-border",
-                            plan.name === "Pro" ? "bg-purple-500/[0.07]" : "bg-foreground/[0.03]"
-                        )}>
-                            <CardTitle className={cn(plan.name !== "Pro" && "text-muted-foreground", "text-lg font-medium")}>
+                        <CardHeader
+                            className={cn(
+                                "border-b border-white/10 rounded-t-2xl pt-6",
+                                plan.name === "Pro" ? "bg-[#1a0f2b]" : "bg-[#111]"
+                            )}
+                        >
+                            <CardTitle className={cn(plan.name !== "Pro" && "text-neutral-200", "text-lg font-medium")}>
                                 {plan.name}
                             </CardTitle>
-                            <CardDescription>
+                            <CardDescription className="text-sm text-muted-foreground">
                                 {plan.info}
                             </CardDescription>
-                            <h5 className="text-3xl font-semibold flex items-end">
+                            <h5 className="text-4xl font-semibold flex items-end">
                                 ${plan.price.yearly}
                                 <div className="text-base text-muted-foreground font-normal">
                                     {plan.name !== "Free" ? "/year" : ""}
@@ -158,7 +164,7 @@ const PricingCards = () => {
                                 )}
                             </h5>
                         </CardHeader>
-                        <CardContent className="pt-6 space-y-4">
+                        <CardContent className="pt-4 pb-6 space-y-4 text-sm">
                             {plan.features.map((feature, index) => (
                                 <div key={index} className="flex items-center gap-2">
                                     <CheckCircleIcon className="text-purple-500 w-4 h-4" />
@@ -179,11 +185,14 @@ const PricingCards = () => {
                                 </div>
                             ))}
                         </CardContent>
-                        <CardFooter className="w-full pt- mt-auto">
+                        <CardFooter className="w-full mt-auto px-6 pb-6 pt-0">
                             <Link
                                 href={plan.btn.href}
                                 style={{ width: "100%" }}
-                                className={buttonVariants({ className: plan.name === "Pro" && "bg-purple-500 hover:bg-purple-500/80 text-white" })}
+                                className={cn(
+                                    "h-12 rounded-lg text-base font-semibold border border-white/10 bg-white text-neutral-900 transition hover:bg-white/90 flex items-center justify-center",
+                                    plan.name === "Pro" && "bg-purple-500 hover:bg-purple-500/90 text-white border-purple-500"
+                                )}
                             >
                                 {plan.btn.text}
                             </Link>

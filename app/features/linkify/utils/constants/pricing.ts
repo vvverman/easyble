@@ -101,18 +101,18 @@
 export const PLANS = [
     {
         name: "Free",
-        info: "For most individuals",
+        info: "For personal use",
         price: {
             monthly: 0,
             yearly: 0,
         },
         features: [
-            { text: "Shorten links" },
-            { text: "Up to 100 tags", limit: "100 tags" },
-            { text: "Customizable branded links" },
-            { text: "Track clicks", tooltip: "1K clicks/month" },
-            { text: "Community support", tooltip: "Get answers your questions on discord" },
-            { text: "AI powered suggestions", tooltip: "Get up to 100 AI powered suggestions" },
+            { text: "Voice tasks: 50 per month" },
+            { text: "Basic AI summary + checklist" },
+            { text: "One backlog (up to 5 columns)" },
+            { text: "1 board, 1 project, 1 team" },
+            { text: "Task history & comments" },
+            { text: "Email/Social login + Community support" },
         ],
         btn: {
             text: "Start for free",
@@ -122,19 +122,19 @@ export const PLANS = [
     },
     {
         name: "Pro",
-        info: "For small businesses",
+        info: "For small teams",
         price: {
             monthly: 9,
             yearly: Math.round(9 * 12 * (1 - 0.12)),
         },
         features: [
-            { text: "Shorten links" },
-            { text: "Up to 500 tags", limit: "500 tags" },
-            { text: "Customizable branded links" },
-            { text: "Track clicks", tooltip: "20K clicks/month" },
-            { text: "Export click data", tooltip: "Upto 1K links" },
-            { text: "Priority support", tooltip: "Get 24/7 chat support" },
-            { text: "AI powered suggestions", tooltip: "Get up to 500 AI powered suggestions" },
+            { text: "Voice tasks: 500 per month" },
+            { text: "Advanced AI: summary, tags, auto column & due date" },
+            { text: "Multiple boards/projects in one team" },
+            { text: "Exports & webhooks (create/status)" },
+            { text: "Reminders & SLA per column" },
+            { text: "Roles: owner / member" },
+            { text: "Priority support" },
         ],
         btn: {
             text: "Get started",
@@ -144,19 +144,19 @@ export const PLANS = [
     },
     {
         name: "Business",
-        info: "For large organizations",
+        info: "For large teams",
         price: {
             monthly: 49,
             yearly: Math.round(49 * 12 * (1 - 0.12)),
         },
         features: [
-            { text: "Shorten links" },
-            { text: "Unlimited tags" },
-            { text: "Customizable branded links" },
-            { text: "Track clicks", tooltip: "Unlimited clicks" },
-            { text: "Export click data", tooltip: "Unlimited clicks" },
-            { text: "Dedicated manager", tooltip: "Get priority support from our team" },
-            { text: "AI powered suggestions", tooltip: "Get unlimited AI powered suggestions" },
+            { text: "Voice tasks: unlimited" },
+            { text: "AI flows: auto assign/status, smart dashboards" },
+            { text: "Multi-team, private/public boards" },
+            { text: "Archive policies & retention" },
+            { text: "Audit & analytics" },
+            { text: "SSO/SAML, SCIM (on request)" },
+            { text: "Dedicated success manager" },
         ],
         btn: {
             text: "Contact team",

@@ -1,6 +1,9 @@
+"use client";
+
 import { ArrowRightIcon, CreditCardIcon, StarIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,13 +19,19 @@ import MagicCard from "@/app/features/linkify/components/ui/magic-card";
 import { COMPANIES, PROCESS, REVIEWS } from "@/app/features/linkify/utils/constants/misc";
 
 export default function LandingPage() {
+  const { t, i18n } = useTranslation();
   const navLinks = [
-    { label: "Features", href: "#features" },
-    { label: "Enterprise", href: "#process" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Resources", href: "#reviews" },
-    { label: "Changelog", href: "#reviews" },
+    { label: t("nav.features"), href: "#features" },
+    { label: t("nav.enterprise"), href: "#process" },
+    { label: t("nav.pricing"), href: "#pricing" },
+    { label: t("nav.resources"), href: "#reviews" },
+    { label: t("nav.changelog"), href: "#cta" },
   ];
+
+  const toggleLang = () => {
+    const next = i18n.language === "ru" ? "en" : "ru";
+    i18n.changeLanguage(next);
+  };
 
   return (
     <div className="relative overflow-x-hidden scrollbar-hide size-full bg-background pt-14">
@@ -56,12 +65,17 @@ export default function LandingPage() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
-            <Button size="sm" variant="outline" className="text-muted-foreground hover:text-foreground">
-              Рус / Eng
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={toggleLang}
+            >
+              {t("nav.langToggle")}
             </Button>
             <Button asChild size="sm" className="shadow-[0_10px_40px_-15px_rgba(255,149,5,0.5)]">
               <Link href="/login" className="flex items-center gap-1.5">
-                Get Started
+                {t("hero.cta")}
                 <span className="inline-flex size-5 items-center justify-center rounded-full bg-gradient-to-r from-amber-400 via-pink-500 to-violet-500 text-[12px] font-semibold text-white shadow-md shadow-amber-500/30">
                   ✦
                 </span>
@@ -83,25 +97,25 @@ export default function LandingPage() {
               <span className="backdrop absolute inset-[1px] rounded-full bg-neutral-950 transition-colors duration-200 group-hover:bg-neutral-900" />
               <span className="h-full w-full blur-md absolute bottom-0 inset-x-0 bg-gradient-to-tr from-primary/20"></span>
               <span className="z-10 py-0.5 text-sm text-neutral-100 flex items-center justify-center gap-1">
-                ✨ Build empathy smarter
+                ✨ {t("hero.badge")}
                 <ArrowRightIcon className="ml-1 size-3 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5" />
               </span>
             </button>
             <h1 className="text-foreground text-center py-6 text-5xl font-medium tracking-normal text-balance sm:text-6xl md:text-7xl lg:text-8xl !leading-[1.15] w-full font-heading">
-              Being empathetic is{" "}
+              {t("hero.titlePrefix")}{" "}
               <span className="text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text inline-bloc">
-                Easyble
+                {t("hero.titleHighlight")}
               </span>
             </h1>
             <p className="mb-12 text-lg tracking-tight text-muted-foreground md:text-xl text-balance">
-              Keep every teammate on the same page — learn, feel, and ship products your users love.
+              {t("hero.descLine1")}
               <br className="hidden md:block" />
-              <span className="hidden md:block">One place to capture feedback, align the team, and act fast together.</span>
+              <span className="hidden md:block">{t("hero.descLine2")}</span>
             </p>
             <div className="flex items-center justify-center whitespace-nowrap gap-4 z-50">
               <Button asChild>
                 <Link href="/login" className="flex items-center">
-                  Start creating for free
+                  {t("hero.cta")}
                   <ArrowRightIcon className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
@@ -133,7 +147,7 @@ export default function LandingPage() {
           <div className="py-14">
             <div className="mx-auto px-4 md:px-8">
               <h2 className="text-center text-sm font-medium font-heading text-neutral-400 uppercase">
-                Trusted by teams who build with heart
+                {t("companies.title")}
               </h2>
               <div className="mt-8">
                 <ul className="flex flex-wrap items-center gap-x-6 gap-y-6 md:gap-x-16 justify-center">
@@ -156,15 +170,15 @@ export default function LandingPage() {
         </AnimationContainer>
       </MaxWidthWrapper>
 
-      <MaxWidthWrapper className="pt-10">
+      <MaxWidthWrapper id="features" className="pt-10">
         <AnimationContainer delay={0.1}>
           <div className="flex flex-col w-full items-center lg:items-center justify-center py-8">
-            <MagicBadge title="Features" />
+            <MagicBadge title={t("features.badge")} />
             <h2 className="text-center lg:text-center text-3xl md:text-5xl !leading-[1.1] font-medium font-heading text-foreground mt-6">
-              Empathy tools for fast-moving teams
+              {t("features.title")}
             </h2>
             <p className="mt-4 text-center lg:text-center text-lg text-muted-foreground max-w-lg">
-              Easyble keeps discovery, feedback, and delivery in one flow so product, design, and engineering stay aligned.
+              {t("features.desc")}
             </p>
           </div>
         </AnimationContainer>
@@ -177,15 +191,15 @@ export default function LandingPage() {
         </AnimationContainer>
       </MaxWidthWrapper>
 
-      <MaxWidthWrapper className="py-10">
+      <MaxWidthWrapper id="process" className="py-10">
         <AnimationContainer delay={0.1}>
           <div className="flex flex-col items-center lg:items-center justify-center w-full py-8 max-w-xl mx-auto">
-            <MagicBadge title="The Process" />
+            <MagicBadge title={t("process.badge")} />
             <h2 className="text-center lg:text-center text-3xl md:text-5xl !leading-[1.1] font-medium font-heading text-foreground mt-6">
-              Align your team in 3 simple steps
+              {t("process.title")}
             </h2>
             <p className="mt-4 text-center lg:text-center text-lg text-muted-foreground max-w-lg">
-              Capture insights, turn them into decisions, and keep everyone synced without extra meetings.
+              {t("process.desc")}
             </p>
           </div>
         </AnimationContainer>
@@ -200,10 +214,10 @@ export default function LandingPage() {
                       {id + 1}
                     </span>
                     <h3 className="text-base mt-6 font-medium text-foreground">
-                      {process.title}
+                      {t(`process.step${id + 1}.title`)}
                     </h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      {process.description}
+                      {t(`process.step${id + 1}.desc`)}
                     </p>
                   </div>
                 </div>
@@ -213,15 +227,15 @@ export default function LandingPage() {
         </div>
       </MaxWidthWrapper>
 
-      <MaxWidthWrapper className="py-10">
+      <MaxWidthWrapper id="pricing" className="py-10">
         <AnimationContainer delay={0.1}>
           <div className="flex flex-col items-center lg:items-center justify-center w-full py-8 max-w-xl mx-auto">
-            <MagicBadge title="Simple Pricing" />
+            <MagicBadge title={t("pricing.badge")} />
             <h2 className="text-center lg:text-center text-3xl md:text-5xl !leading-[1.1] font-medium font-heading text-foreground mt-6">
-              Choose a plan that works for your team
+              {t("pricing.title")}
             </h2>
             <p className="mt-4 text-center lg:text-center text-lg text-muted-foreground max-w-lg">
-              Start with Easyble today and unlock advanced collaboration when you&apos;re ready.
+              {t("pricing.desc")}
             </p>
           </div>
         </AnimationContainer>
@@ -233,22 +247,22 @@ export default function LandingPage() {
             <div className="flex items-center gap-2">
               <CreditCardIcon className="w-5 h-5 text-foreground" />
               <span className="text-muted-foreground">
-                No credit card required
+                {t("pricing.credit")}
               </span>
             </div>
           </div>
         </AnimationContainer>
       </MaxWidthWrapper>
 
-      <MaxWidthWrapper className="py-10">
+      <MaxWidthWrapper id="reviews" className="py-10">
         <AnimationContainer delay={0.1}>
           <div className="flex flex-col items-center lg:items-center justify-center w-full py-8 max-w-xl mx-auto">
-            <MagicBadge title="Our Customers" />
+            <MagicBadge title={t("reviews.badge")} />
             <h2 className="text-center lg:text-center text-3xl md:text-5xl !leading-[1.1] font-medium font-heading text-foreground mt-6">
-              What our users are saying
+              {t("reviews.title")}
             </h2>
             <p className="mt-4 text-center lg:text-center text-lg text-muted-foreground max-w-lg">
-              Teams rely on Easyble to keep feedback, decisions, and delivery in sync.
+              {t("reviews.desc")}
             </p>
           </div>
         </AnimationContainer>
@@ -259,12 +273,25 @@ export default function LandingPage() {
                 <MagicCard key={index} className="md:p-0">
                   <Card className="flex flex-col w-full border-none h-min">
                     <CardHeader className="space-y-0">
-                      <CardTitle className="text-lg font-medium text-muted-foreground">
-                        {review.name}
-                      </CardTitle>
-                      <CardDescription>
-                        {review.username}
-                      </CardDescription>
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <CardTitle className="text-lg font-medium text-muted-foreground">
+                            {review.name}
+                          </CardTitle>
+                          <CardDescription>
+                            {review.username}
+                          </CardDescription>
+                        </div>
+                        {review.avatar && (
+                          <Image
+                            src={review.avatar}
+                            alt={review.name}
+                            width={40}
+                            height={40}
+                            className="rounded-full ring-1 ring-border/60"
+                          />
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-4 pb-4">
                       <p className="text-muted-foreground">
@@ -340,22 +367,22 @@ export default function LandingPage() {
         </div>
       </MaxWidthWrapper>
 
-      <MaxWidthWrapper className="mt-20 max-w-[100vw] overflow-x-hidden scrollbar-hide">
+      <MaxWidthWrapper id="cta" className="mt-20 max-w-[100vw] overflow-x-hidden scrollbar-hide">
         <AnimationContainer delay={0.1}>
           <LampContainer>
             <div className="flex flex-col items-center justify-center relative w-full text-center">
                 <h2 className="bg-gradient-to-b from-neutral-200 to-neutral-400 py-4 bg-clip-text text-center text-4xl md:text-7xl !leading-[1.15] font-medium font-heading tracking-tight text-transparent mt-8">
-                  Step into the future of empathetic product teams
+                  {t("cta.title")}
                 </h2>
                 <p className="text-muted-foreground mt-6 max-w-md mx-auto">
-                  Easyble keeps customer signals, team alignment, and execution flowing in one place—so you ship what people truly need.
+                  {t("cta.desc")}
                 </p>
-              <div className="mt-6">
-                <Button asChild>
-                  <Link href="/login">
-                    Get started for free
+                <div className="mt-6">
+                  <Button asChild>
+                    <Link href="/login">
+                    {t("cta.button")}
                     <ArrowRightIcon className="w-4 h-4 ml-2" />
-                  </Link>
+                    </Link>
                 </Button>
               </div>
             </div>
@@ -379,10 +406,10 @@ export default function LandingPage() {
                 />
               </div>
               <p className="text-muted-foreground mt-4 text-sm text-start">
-                Stay close to your users, ship with confidence.
+                {t("footer.tagline")}
               </p>
               <span className="mt-4 text-neutral-200 text-sm flex items-center">
-                Made by Easyble
+                {t("footer.madeBy")}
               </span>
             </div>
           </AnimationContainer>
@@ -392,27 +419,27 @@ export default function LandingPage() {
               <AnimationContainer delay={0.2}>
                 <div>
                   <h3 className="text-base font-medium text-white">
-                    Product
+                    {t("footer.product")}
                   </h3>
                   <ul className="mt-4">
                     <li className="mt-2">
                       <Link href="#features" className="hover:text-foreground transition-all duration-300">
-                        Features
+                        {t("footer.links.features")}
                       </Link>
                     </li>
                     <li className="mt-2">
                       <Link href="#pricing" className="hover:text-foreground transition-all duration-300">
-                        Pricing
+                        {t("footer.links.pricing")}
                       </Link>
                     </li>
                     <li className="mt-2">
                       <Link href="#reviews" className="hover:text-foreground transition-all duration-300">
-                        Testimonials
+                        {t("footer.links.testimonials")}
                       </Link>
                     </li>
                     <li className="mt-2">
                       <Link href="#process" className="hover:text-foreground transition-all duration-300">
-                        Integration
+                        {t("footer.links.integration")}
                       </Link>
                     </li>
                   </ul>
@@ -421,27 +448,27 @@ export default function LandingPage() {
               <AnimationContainer delay={0.3}>
                 <div className="mt-10 md:mt-0">
                   <h3 className="text-base font-medium text-white">
-                    Integrations
+                    {t("footer.integrations")}
                   </h3>
                   <ul className="mt-4">
                     <li className="">
                       <Link href="/login" className="hover:text-foreground transition-all duration-300">
-                        Facebook
+                        {t("footer.links.facebook")}
                       </Link>
                     </li>
                     <li className="mt-2">
                       <Link href="/login" className="hover:text-foreground transition-all duration-300">
-                        Instagram
+                        {t("footer.links.instagram")}
                       </Link>
                     </li>
                     <li className="mt-2">
                       <Link href="/login" className="hover:text-foreground transition-all duration-300">
-                        Twitter
+                        {t("footer.links.twitter")}
                       </Link>
                     </li>
                     <li className="mt-2">
                       <Link href="/login" className="hover:text-foreground transition-all duration-300">
-                        LinkedIn
+                        {t("footer.links.linkedin")}
                       </Link>
                     </li>
                   </ul>
@@ -452,17 +479,17 @@ export default function LandingPage() {
               <AnimationContainer delay={0.4}>
                 <div>
                   <h3 className="text-base font-medium text-white">
-                    Resources
+                    {t("footer.resources")}
                   </h3>
                   <ul className="mt-4">
                     <li className="mt-2">
                       <Link href="/login" className="hover:text-foreground transition-all duration-300">
-                        Blog
+                        {t("footer.links.blog")}
                       </Link>
                     </li>
                     <li className="mt-2">
                       <Link href="/login" className="hover:text-foreground transition-all duration-300">
-                        Support
+                        {t("footer.links.support")}
                       </Link>
                     </li>
                   </ul>
@@ -471,22 +498,22 @@ export default function LandingPage() {
               <AnimationContainer delay={0.5}>
                 <div className="mt-10 md:mt-0">
                   <h3 className="text-base font-medium text-white">
-                    Company
+                    {t("footer.company")}
                   </h3>
                   <ul className="mt-4">
                     <li className="">
                       <Link href="/login" className="hover:text-foreground transition-all duration-300">
-                        About Us
+                        {t("footer.links.about")}
                       </Link>
                     </li>
                     <li className="mt-2">
                       <Link href="/login" className="hover:text-foreground transition-all duration-300">
-                        Privacy Policy
+                        {t("footer.links.privacy")}
                       </Link>
                     </li>
                     <li className="mt-2">
                       <Link href="/login" className="hover:text-foreground transition-all duration-300">
-                        Terms & Conditions
+                        {t("footer.links.terms")}
                       </Link>
                     </li>
                   </ul>
